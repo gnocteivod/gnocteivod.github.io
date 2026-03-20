@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+@import url('https://fonts.googleapis.com/css?family=Indie+Flower');
+
+/* Also import 'Roboto' font */
+body {
+    font-family: Roboto, sans-serif;
+    background: #e2d7aa;
+    color: #000000;
+    font-size: 16px;
+    width: 1180px;
+    line-height: 24px;
+    margin: 0 auto;
+}
+
+body > div.img-container > img {
+    width: 1100px;
+    height: 450px;
+}
+
+body > div.img-container {
+    width: 1600px;
+    height: 450px;
+    margin-top: 65px;
+}
+
+h1 {
+    font-size: 60px;
+    font-family: 'Indie Flower', cursive;
+    letter-spacing: 5px;
+    text-align: center;
+    margin-top: 65px;
+}
+
+a {
+    text-decoration: none;
+}
+
+nav {
+    margin: 30px;
+    text-align: center;
+}
+
+nav a {
+    text-decoration: none;
+    font-size: 28px;
+    color: #000000;
+}
+
+nav ul li {
+    list-style: none;
+    display: inline;
+    padding: 0 12px 0 12px;
+}
+
+nav ul li:first-of-type a,
+nav ul li:last-of-type a {
+    padding-left: 0;
+    color: #0a2d4a;
+    font-weight: bold;
+}
+
+main {
+    margin-top: 30px;
+}
+
+article {
+    width: 370px;
+    display: inline-block;
+}
+
+main > article img {
+    width: 350px;
+    height: 200px;
+    margin-bottom: 20px;
+}
+
+p {
+    width: 345px;
+    text-align: justify;
+    margin-bottom: 20px;
+}
+
+article img + p:first-letter {
+    font-family: EucrosiaUPC, sans-serif;
+    text-transform: uppercase;
+    font-size: 40px;
+}
+
+.readmore a,
+.comments a {
+    background: url(images/bg2.jpg);
+    color: #ffffff;
+    padding: 10px;
+    margin-top: 10px;
+    text-transform: uppercase;
+}
+
+footer {
+    margin: 0;
+    padding: 10px 0 10px 0;
+    text-align: center;
+}
+
+article p:last-of-type span:first-of-type a::before {
+    content: url("images/comment.png");
+    position: relative;
+    padding: 10px;
+    right: 5px;
+    top: 7px;
+}
+</style>
+    <meta charset="UTF-8">
+    <title>Ancient Architecture</title>
+    <link rel="stylesheet" type="text/css" href="ancient-architecture.css"/>
+</head>
+<body>
+<nav>
+    <ul>
+        <li><a href="#" class="home">Home</a></li>
+        <li><a href="#">Services</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Portfolio</a></li>
+        <li><a href="#">About</a></li>
+        <li><a href="#">History</a></li>
+        <li><a href="#">Contact</a></li>
+    </ul>
+</nav>
+<h1>Ancient Architecture</h1>
+<div class="img-container">
+    <img src="images/Mayan_Architecture.jpg" alt="mayan-architecture"/>
+</div>
+
+<main>
+    <article>
+        <h2>Ancient Roman architecture</h2>
+        <h3>Posted on 01.01.2017 by <a href="#">Someone</a></h3>
+        <img src="images/Roma.jpg" alt="rome"/>
+        <p>
+            Ancient Roman architecture adopted the external language of classical Greek architecture for the
+            purposes of the ancient Romans, but grew so different from Greek buildings as to become a new
+            architectural style. The two styles are often considered one body of classical architecture. Roman
+            architecture flourished in the Roman Republic and even more so under the Empire, when the great
+            majority of surviving buildings were constructed. It used new materials, particularly concrete, and
+            newer technologies such as the arch and the dome to make buildings that were typically strong and
+            well-engineered. Large numbers remain in some form across the empire, sometimes complete and still
+            in use.
+        </p>
+        <p>
+            <span class="comments"><a href="#">0 comments</a></span>
+
+            <span class="readmore"><a href="#">view post</a></span>
+        </p>
+    </article>
+
+    <article>
+        <h2>Ancient Greek architecture</h2>
+        <h3>Posted on 01.01.2017 by <a href="#">Someone</a></h3>
+        <img src="images/Greek.jpg" alt=""/>
+        <p>
+            The architecture of ancient Greece is the architecture produced by the Greek-speaking people
+            (Hellenic people) whose culture flourished on the Greek mainland, the Peloponnese, the Aegean
+            Islands, and in colonies in Anatolia and Italy for a period from about 900 BC until the 1st century
+            AD, with the earliest remaining architectural works dating from around 600 BC.[1]
+            Ancient Greek architecture is best known from its temples, many of which are found throughout the
+            region, mostly as ruins but many substantially intact. The second important type of building that
+            survives all over the Hellenic world is the open-air theatre, with the earliest dating from around
+            525-480 BC.
+        </p>
+        <p>
+            <span class="comments"><a href="#">0 comments</a></span>
+
+            <span class="readmore"><a href="#">view post</a></span>
+        </p>
+    </article>
+
+
+    <article>
+        <h2>Ancient Indian Architecture</h2>
+        <h3>Posted on 01.01.2017 by <a href="#">Someone</a></h3>
+        <img src="images/ancient-indian-architecture.jpg" alt=""/>
+        <p>
+            Indian architecture is as old as the history of the civilization.The earliest remains of
+            recognizable building activity in the India dates back to the Indus Valley cities. Among India's
+            ancient architectural remains, the most characteristic are the temples, Chaityas, Viharas, Stupas
+            and other religious structures. In ancient India, temple architecture of high standard developed in
+            almost all regions. The distinct architectural style of temple construction in different parts was a
+            result of geographical, climatic, ethnic, racial, historical and linguistic diversities.
+            The Rock-cut structures present the most spectacular piece of ancient Indian art specimen. Most of
+            the rock-cut structures were related to various religious communities.
+        </p>
+        <p>
+            <span class="comments"><a href="#">0 comments</a></span>
+
+            <span class="readmore"><a href="#">view post</a></span>
+        </p>
+    </article>
+</main>
+<footer>
+    &copy; Copyright OldWorld by Anonymous.Photos by Anonymous.
+</footer>
+</body>
+</html>
