@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="vi" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventHub - Full Pastel Experience</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        /* ===== DARK MODE ===== */
+        /* Body background thay gradient pastel → gradient tối */
+        html.dark body {
+            background: linear-gradient(135deg, #1a0a10 0%, #0f0f1a 50%, #051a18 100%) !important;
+            background-attachment: fixed !important;
+            color: #e5e7eb !important;
+        }
+
+        /* Header */
+        html.dark header {
+            background-color: rgba(10,10,15,0.95) !important;
+            border-color: rgba(255,255,255,0.08) !important;
+        }
+
+        /* Search input */
+        html.dark #search-input {
+            background-color: rgba(255,255,255,0.08) !important;
+            border-color: rgba(255,255,255,0.12) !important;
+            color: #e5e7eb !important;
+        }
+        html.dark #search-input::placeholder { color: #6b7280 !important; }
+
+        /* Search suggestions dropdown */
+        html.dark #search-suggestions {
+            background: rgba(20,20,30,0.98) !important;
+            border-color: rgba(255,255,255,0.1) !important;
+        }
+
+        /* Nav links */
+        html.dark nav a { color: #d1d5db !important; }
+        html.dark nav a:hover { color: #60a5fa !important; }
+
+        /* Nút Đăng nhập / Đăng ký */
+        html.dark .bg-gray-100\/80 {
+            background-color: rgba(255,255,255,0.08) !important;
+            border-color: rgba(255,255,255,0.1) !important;
+        }
+        html.dark .bg-white.text-gray-700 {
+            background-color: rgba(255,255,255,0.12) !important;
+            color: #e5e7eb !important;
+        }
+
+        /* Text màu tối → sáng */
+        html.dark .text-gray-900 { color: #f3f4f6 !important; }
+        html.dark .text-gray-800 { color: #e5e7eb !important; }
+        html.dark .text-gray-600 { color: #9ca3af !important; }
+        html.dark .text-gray-500 { color: #6b7280 !important; }
+        html.dark .text-gray-400 { color: #6b7280 !important; }
+
+        /* 3 ô danh mục (Âm nhạc / Workshop / Sân khấu) */
+        html.dark .bg-pink-100 {
+            background-color: rgba(244,114,182,0.15) !important;
+            color: #f9a8d4 !important;
+            border-color: rgba(244,114,182,0.2) !important;
+        }
+        html.dark .bg-blue-100 {
+            background-color: rgba(96,165,250,0.15) !important;
+            color: #93c5fd !important;
+            border-color: rgba(96,165,250,0.2) !important;
+        }
+        html.dark .bg-white\/50 {
+            background-color: rgba(255,255,255,0.08) !important;
+            border-color: rgba(255,255,255,0.12) !important;
+        }
+
+        /* Glass card (timeline) */
+        html.dark .glass-card {
+            background: rgba(255,255,255,0.06) !important;
+            border-color: rgba(255,255,255,0.1) !important;
+        }
+
+        /* Blob shape */
+        html.dark .blob-shape {
+            background: #1e1e2e !important;
+            box-shadow: 20px 20px 60px #0a0a1a, -20px -20px 60px #1a1a2e !important;
+            border-color: rgba(255,255,255,0.1) !important;
+        }
+
+        /* Event cards (ảnh placeholder) */
+        html.dark .border-white { border-color: rgba(255,255,255,0.1) !important; }
+        html.dark .bg-white\/90 { background-color: rgba(30,30,40,0.9) !important; color: #e5e7eb !important; }
+
+        /* Nút "Xem chi tiết" trên card */
+        html.dark button.bg-white\/90 {
+            background-color: rgba(255,255,255,0.15) !important;
+            color: #e5e7eb !important;
+        }
+
+        /* Footer */
+        html.dark footer {
+            border-color: rgba(255,255,255,0.08) !important;
+            color: #4b5563 !important;
+        }
+
+        /* Nút theme toggle */
+        html.dark #theme-toggle {
+            background-color: rgba(255,255,255,0.1) !important;
+            border-color: rgba(255,255,255,0.15) !important;
+        }
+
+        /* Thanh danh mục đen bên dưới header — giữ nguyên, chỉ đậm hơn chút */
+        html.dark .bg-\[\#1a1a1a\] { background-color: #050505 !important; }
+    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+     <link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+
+   <header class="sticky top-0 z-[100] bg-white/90 backdrop-blur-lg border-b border-white shadow-sm">
+    <!-- TẦNG 1: ĐIỀU HƯỚNG CHÍNH & TÌM KIẾM -->
+    <div class="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between gap-8 relative">
+        
+        <!-- Nhóm 1: Logo + Menu chính -->
+        <div class="flex items-center space-x-10 flex-shrink-0">
+            <a href="index.html">
+                <h1 class="text-3xl font-black text-[#F33B26] tracking-tighter cursor-pointer">EventHub</h1>
+            </a>
+            <nav class="hidden xl:flex space-x-6 font-bold text-gray-600 dark:text-gray-300">
+                <!-- TODO: link tới trang danh sách sự kiện -->
+                <a href="events.html" class="hover:text-blue-400 transition">Sự kiện</a>
+                <!-- TODO: link tới trang lịch tương tác -->
+                <a href="calendar.html" class="hover:text-blue-400 transition">Lịch</a>
+            </nav>
+        </div>
+
+        <!-- Nhóm 2: Thanh Tìm kiếm kiểu Ticketbox -->
+        <div class="flex-1 max-w-2xl relative">
+            <div class="flex items-center bg-white border-2 border-gray-200 rounded-full shadow-md overflow-hidden hover:border-pink-300 transition-all">
+                <!-- Ô tìm kiếm -->
+                <div class="flex items-center flex-1 px-4 py-2 border-r border-gray-200">
+                    <i class="fa-solid fa-magnifying-glass text-gray-400 mr-3 text-sm"></i>
+                    <input type="text" id="search-input"
+                           placeholder="Tìm kiếm sự kiện, nghệ sĩ..."
+                           class="w-full outline-none bg-transparent font-medium text-sm text-gray-700 placeholder-gray-400">
+                </div>
+                <!-- Dropdown địa điểm -->
+                <div class="relative px-4 py-2 border-r border-gray-200 cursor-pointer hover:bg-gray-50 transition" id="location-btn">
+                    <div class="flex items-center gap-2 text-sm font-bold text-gray-600 whitespace-nowrap">
+                        <i class="fa-solid fa-location-dot text-pink-400"></i>
+                        <span id="location-text">Hà Nội</span>
+                        <i class="fa-solid fa-chevron-down text-xs text-gray-400"></i>
+                    </div>
+                    <!-- Dropdown list địa điểm -->
+                    <div id="location-dropdown" class="hidden absolute top-[120%] right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 py-2 min-w-[160px] z-50">
+                        <div class="px-3 py-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">Chọn thành phố</div>
+                        <div class="location-option px-4 py-2.5 hover:bg-pink-50 cursor-pointer text-sm font-bold text-gray-700 flex items-center gap-2" data-city="Hà Nội">
+                            <i class="fa-solid fa-circle text-[6px] text-pink-400"></i> Hà Nội
+                        </div>
+                        <div class="location-option px-4 py-2.5 hover:bg-pink-50 cursor-pointer text-sm font-bold text-gray-700 flex items-center gap-2" data-city="TP. Hồ Chí Minh">
+                            <i class="fa-solid fa-circle text-[6px] text-gray-300"></i> TP. Hồ Chí Minh
+                        </div>
+                        <div class="location-option px-4 py-2.5 hover:bg-pink-50 cursor-pointer text-sm font-bold text-gray-700 flex items-center gap-2" data-city="Đà Nẵng">
+                            <i class="fa-solid fa-circle text-[6px] text-gray-300"></i> Đà Nẵng
+                        </div>
+                        <div class="location-option px-4 py-2.5 hover:bg-pink-50 cursor-pointer text-sm font-bold text-gray-700 flex items-center gap-2" data-city="Toàn quốc">
+                            <i class="fa-solid fa-circle text-[6px] text-gray-300"></i> Toàn quốc
+                        </div>
+                    </div>
+                </div>
+                <!-- Nút tìm kiếm -->
+                <button class="bg-[#F33B26] text-white px-6 py-2.5 font-black text-sm hover:bg-red-600 transition flex items-center gap-2 rounded-r-full">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span class="hidden sm:inline">Tìm</span>
+                </button>
+            </div>
+
+            <!-- Bảng Gợi ý kiểu Ticketbox -->
+            <div id="search-suggestions" class="absolute top-[120%] left-0 right-0 bg-white rounded-3xl shadow-2xl border border-gray-100 p-5 hidden z-50">
+                <div class="space-y-5">
+                    <!-- Tìm kiếm gần đây -->
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase mb-3 tracking-widest flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left"></i> Tìm kiếm gần đây
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="suggestion-tag px-3 py-1.5 bg-gray-100 rounded-full text-xs font-bold text-gray-600 cursor-pointer hover:bg-pink-100 hover:text-pink-600 transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-clock-rotate-left text-[10px]"></i> Concert 9
+                            </span>
+                            <span class="suggestion-tag px-3 py-1.5 bg-gray-100 rounded-full text-xs font-bold text-gray-600 cursor-pointer hover:bg-pink-100 hover:text-pink-600 transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-clock-rotate-left text-[10px]"></i> Slay Festival
+                            </span>
+                        </div>
+                    </div>
+                    <!-- Sự kiện nổi bật -->
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase mb-3 tracking-widest flex items-center gap-2">
+                            <i class="fa-solid fa-fire text-orange-400"></i> Sự kiện nổi bật
+                        </p>
+                        <div class="space-y-2">
+                            <a href="event-detail.html" class="suggestion-item flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-pink-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-pink-100 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-music text-pink-400 text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-sm text-gray-800 group-hover:text-pink-500 transition">Concert 9 - Vạn Phúc City</p>
+                                    <p class="text-xs text-gray-400">18.04.2026 · Hà Nội</p>
+                                </div>
+                            </a>
+                            <a href="event-detail.html" class="suggestion-item flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-pink-50 transition group">
+                                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                    <i class="fa-solid fa-star text-blue-400 text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-sm text-gray-800 group-hover:text-pink-500 transition">Slay Music Festival</p>
+                                    <p class="text-xs text-gray-400">30.04.2026 · TP. HCM</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Từ khóa hot -->
+                    <div>
+                        <p class="text-[10px] font-black text-gray-400 uppercase mb-3 tracking-widest flex items-center gap-2">
+                            <i class="fa-solid fa-hashtag text-blue-400"></i> Từ khóa hot
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1.5 bg-pink-50 text-pink-500 rounded-full text-xs font-bold cursor-pointer hover:bg-pink-400 hover:text-white transition">#Indie</span>
+                            <span class="px-3 py-1.5 bg-blue-50 text-blue-500 rounded-full text-xs font-bold cursor-pointer hover:bg-blue-400 hover:text-white transition">#Workshop</span>
+                            <span class="px-3 py-1.5 bg-purple-50 text-purple-500 rounded-full text-xs font-bold cursor-pointer hover:bg-purple-400 hover:text-white transition">#Sânkhấu</span>
+                            <span class="px-3 py-1.5 bg-orange-50 text-orange-500 rounded-full text-xs font-bold cursor-pointer hover:bg-orange-400 hover:text-white transition">#Thểthao</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nhóm 3: Chức năng cá nhân -->
+        <div class="flex items-center space-x-5 flex-shrink-0 font-bold text-sm">
+            <!-- Nút Dark/Light Mode -->
+            <button id="theme-toggle" onclick="toggleTheme()"
+                class="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center hover:scale-110 transition shadow-sm"
+                title="Đổi giao diện">
+                <i id="theme-icon" class="fa-solid fa-moon text-gray-500 dark:text-yellow-300 text-sm"></i>
+            </button>
+            <!-- TODO: link tới trang tạo sự kiện (dành cho admin) -->
+            <a href="create-event.html" class="hidden lg:flex items-center text-blue-500 border-2 border-blue-100 bg-blue-50/30 px-4 py-1.5 rounded-full hover:bg-blue-100 transition shadow-sm text-xs">
+                <i class="fa-solid fa-plus-circle mr-2"></i> Tạo sự kiện
+            </a>
+            <!-- TODO: link tới trang dashboard > tab vé của tôi (cần đăng nhập) -->
+            <a href="dashboard.html" class="hidden sm:flex items-center text-gray-600 hover:text-pink-500 transition text-xs">
+                <i class="fa-solid fa-ticket mr-2 text-pink-400"></i> Vé của tôi
+            </a>
+            <!-- Nút Đăng nhập/Đăng ký gọn gàng -->
+            <div class="flex items-center bg-gray-100/80 rounded-full p-1 border border-gray-200">
+                <!-- TODO: link tới trang đăng nhập -->
+                <a href="login.html" class="bg-white text-gray-700 px-4 py-1.5 rounded-full shadow-sm text-xs hover:text-pink-500 transition">Đăng nhập</a>
+                <!-- TODO: link tới trang đăng ký tài khoản -->
+                <a href="register.html" class="text-gray-500 px-3 py-1.5 text-xs hover:text-blue-500 transition">Đăng ký</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- TẦNG 2: DANH MỤC SỰ KIỆN (THANH ĐEN) -->
+    <div class="bg-[#1a1a1a] text-white py-2.5 overflow-x-auto no-scrollbar">
+        <div class="max-w-[1400px] mx-auto px-6 flex space-x-10 text-[11px] font-bold whitespace-nowrap uppercase tracking-[0.15em]">
+            <!-- TODO: link tới events.html?category=nhac-song -->
+            <a href="events.html" class="text-pink-400 border-b border-pink-400">Nhạc sống</a>
+            <!-- TODO: link tới events.html?category=san-khau -->
+            <a href="events.html" class="text-gray-400 hover:text-white transition">Sân khấu & Nghệ thuật</a>
+            <!-- TODO: link tới events.html?category=the-thao -->
+            <a href="events.html" class="text-gray-400 hover:text-white transition">Thể thao</a>
+            <!-- TODO: link tới events.html?category=hoi-thao -->
+            <a href="events.html" class="text-gray-400 hover:text-white transition">Hội thảo & Workshop</a>
+            <!-- TODO: link tới events.html?category=tham-quan -->
+            <a href="events.html" class="text-gray-400 hover:text-white transition">Tham quan & Trải nghiệm</a>
+            <!-- TODO: link tới events.html?category=khac -->
+            <a href="events.html" class="text-gray-400 hover:text-white transition">Khác</a>
+            <!-- TODO: link tới trang về bán lại vé -->
+            <a href="events.html" class="text-gray-400 hover:text-white transition">Về bán lại</a>
+            <!-- TODO: link tới trang blog -->
+            <a href="blog.html" class="text-gray-400 hover:text-white transition">Blog</a>
+        </div>
+    </div>
+</header>
+   
+    <main class="max-w-[1400px] mx-auto px-6 py-10">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 min-h-[80vh] items-center">
+            
+            <div class="space-y-10">
+                <div class="space-y-4">
+                    <h2 class="text-7xl font-black text-gray-900 leading-[0.9]">CONCERT<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-blue-400">CỰC HOTT</span></h2>
+                    <p class="text-2xl font-bold text-gray-500">18.04.2026 | VẠN PHÚC CITY</p>
+                    <!-- TODO: link tới trang chi tiết sự kiện Concert Cực Hott -->
+                    <a href="event-detail.html">
+                        <button class="bg-[#FBD719] text-black px-10 py-4 rounded-xl font-black text-xl shadow-lg hover:scale-105 transition">Đăng ký ngay</button>
+                    </a>
+                </div>
+                
+      <div class="grid grid-cols-3 gap-4">
+                    <!-- TODO: link tới events.html?category=am-nhac -->
+                    <a href="events.html" class="h-32 rounded-2xl bg-pink-100 border-2 border-white shadow-inner flex items-center justify-center font-bold hover:scale-105 transition">Âm nhạc</a>
+                    <!-- TODO: link tới events.html?category=workshop -->
+                    <a href="events.html" class="h-32 rounded-2xl bg-blue-100 border-2 border-white shadow-inner flex items-center justify-center font-bold hover:scale-105 transition">Workshop</a>
+                    <!-- TODO: link tới events.html?category=san-khau -->
+                    <a href="events.html" class="h-32 rounded-2xl bg-white/50 border-2 border-white shadow-inner flex items-center justify-center font-bold hover:scale-105 transition">Sân khấu</a>
+                </div>
+            </div>
+
+           
+            <div class="space-y-12">
+                <div class="flex justify-center">
+                    <div class="w-64 h-64 blob-shape border-4 border-white shadow-xl">
+                        <img src="https://api.dicebear.com/7.x/notionists/svg?seed=Event" class="w-full h-full object-cover">
+                    </div>
+                </div>
+                <div class="glass-card p-6 rounded-[2rem] relative">
+                    <div class="absolute left-1/2 -translate-x-1/2 h-full timeline-line"></div>
+                    <div class="relative space-y-8">
+                        <div class="flex items-center justify-between">
+                            <div class="w-[40%] text-right font-bold text-pink-500">CONCERT HOTT</div>
+                            <div class="w-4 h-4 rounded-full bg-blue-400 z-10 border-2 border-white"></div>
+                            <div class="w-[40%]"><div class="w-12 h-12 bg-white rounded-lg shadow-sm"></div></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="w-[40%] flex justify-end"><div class="w-12 h-12 bg-white rounded-lg shadow-sm"></div></div>
+                            <div class="w-4 h-4 rounded-full bg-pink-400 z-10 border-2 border-white"></div>
+                            <div class="w-[40%] font-bold text-blue-500 text-left">XOAY TRÒN</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-20 border-white/50">
+
+    
+        <div class="space-y-16">
+          
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- TODO: link tới event-detail.html cho sự kiện Gai Home Concert -->
+                <a href="event-detail.html" class="group relative rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white aspect-video bg-gray-200 block">
+                    <img src="https://via.placeholder.com/800x450/FFDEE9/555?text=GAI+HOME+CONCERT" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <div class="absolute bottom-6 left-6">
+                        <span class="bg-white/90 px-6 py-2 rounded-lg font-bold shadow-md">Xem chi tiết</span>
+                    </div>
+                </a>
+                <!-- TODO: link tới event-detail.html cho sự kiện Concert 9 -->
+                <a href="event-detail.html" class="group relative rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-white aspect-video bg-gray-200 block">
+                    <img src="https://via.placeholder.com/800x450/B5FFFC/555?text=CONCERT+9" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                    <div class="absolute bottom-6 left-6">
+                        <span class="bg-white/90 px-6 py-2 rounded-lg font-bold shadow-md">Xem chi tiết</span>
+                    </div>
+                </a>
+            </div>
+
+            <section class="space-y-8">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-3xl font-black text-gray-800">SỰ KIỆN ĐẶC BIỆT</h3>
+                    <div class="flex space-x-2">
+                        <div class="w-3 h-3 rounded-full bg-pink-400"></div>
+                        <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                        <div class="w-3 h-3 rounded-full bg-gray-300"></div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                    <!-- TODO: link tới event-detail.html cho sự kiện The Tempting Venom -->
+                    <a href="event-detail.html" class="group cursor-pointer space-y-3 block">
+                        <div class="rounded-2xl overflow-hidden shadow-lg border-2 border-white aspect-[3/4] relative">
+                            <img src="https://via.placeholder.com/300x400/FFDEE9/555?text=Poster+1" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                            <div class="absolute top-2 right-2 bg-red-500 text-white text-[10px] px-2 py-1 rounded font-bold">HOT</div>
+                        </div>
+                        <p class="font-bold text-sm truncate uppercase">The Tempting Venom</p>
+                    </a>
+                    <!-- TODO: link tới event-detail.html cho sự kiện Ra Giêng Anh Cưới Em -->
+                    <a href="event-detail.html" class="group cursor-pointer space-y-3 block">
+                        <div class="rounded-2xl overflow-hidden shadow-lg border-2 border-white aspect-[3/4]">
+                            <img src="https://via.placeholder.com/300x400/FFFFFF/555?text=Poster+2" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        </div>
+                        <p class="font-bold text-sm truncate uppercase">Ra Giêng Anh Cưới Em</p>
+                    </a>
+                    <!-- TODO: link tới event-detail.html cho sự kiện Sân Khấu Sự Việt -->
+                    <a href="event-detail.html" class="group cursor-pointer space-y-3 block">
+                        <div class="rounded-2xl overflow-hidden shadow-lg border-2 border-white aspect-[3/4]">
+                            <img src="https://via.placeholder.com/300x400/B5FFFC/555?text=Poster+3" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        </div>
+                        <p class="font-bold text-sm truncate uppercase">Sân Khấu Sự Việt</p>
+                    </a>
+                    <!-- TODO: link tới event-detail.html cho sự kiện MB Hanoi Cup 2026 -->
+                    <a href="event-detail.html" class="group cursor-pointer space-y-3 block">
+                        <div class="rounded-2xl overflow-hidden shadow-lg border-2 border-white aspect-[3/4]">
+                            <img src="https://via.placeholder.com/300x400/E0E0E0/555?text=Poster+4" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        </div>
+                        <p class="font-bold text-sm truncate uppercase">MB Hanoi Cup 2026</p>
+                    </a>
+                    <!-- TODO: link tới event-detail.html cho sự kiện Làng Võ Tắc -->
+                    <a href="event-detail.html" class="group cursor-pointer space-y-3 block">
+                        <div class="rounded-2xl overflow-hidden shadow-lg border-2 border-white aspect-[3/4]">
+                            <img src="https://via.placeholder.com/300x400/FFDEE9/555?text=Poster+5" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                        </div>
+                        <p class="font-bold text-sm truncate uppercase">Làng Võ Tắc</p>
+                    </a>
+                </div>
+            </section>
+
+            <!-- ===== SECTION: SỰ KIỆN SẮP DIỄN RA ===== -->
+            <section class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-3xl font-black text-gray-800">SỰ KIỆN SẮP DIỄN RA</h3>
+                        <p class="text-sm text-gray-400 font-medium mt-1">Đừng bỏ lỡ những sự kiện hot nhất tuần này</p>
+                    </div>
+                    <!-- TODO: link tới events.html xem tất cả -->
+                    <a href="events.html" class="text-sm font-bold text-pink-500 hover:text-pink-600 flex items-center gap-1 transition">
+                        Xem tất cả <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <!-- TODO: thay bằng dữ liệu thật từ mockData.js -->
+                    <a href="event-detail.html" class="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
+                        <div class="relative aspect-video overflow-hidden">
+                            <img src="https://via.placeholder.com/400x225/FFDEE9/555?text=Event+1" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-black text-pink-500 uppercase">Âm nhạc</div>
+                        </div>
+                        <div class="p-4 space-y-2">
+                            <p class="font-black text-gray-800 text-sm line-clamp-2 group-hover:text-pink-500 transition">Concert Cực Hott - Đêm Nhạc Đặc Biệt</p>
+                            <div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                                <i class="fa-regular fa-calendar text-pink-400"></i> 18.04.2026
+                            </div>
+                            <div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                                <i class="fa-solid fa-location-dot text-blue-400"></i> Vạn Phúc City, Hà Đông
+                            </div>
+                            <div class="flex items-center justify-between pt-1">
+                                <span class="text-sm font-black text-[#F33B26]">Từ 500.000đ</span>
+                                <span class="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold">Còn vé</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="event-detail.html" class="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
+                        <div class="relative aspect-video overflow-hidden">
+                            <img src="https://via.placeholder.com/400x225/B5FFFC/555?text=Event+2" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-black text-blue-500 uppercase">Workshop</div>
+                        </div>
+                        <div class="p-4 space-y-2">
+                            <p class="font-black text-gray-800 text-sm line-clamp-2 group-hover:text-pink-500 transition">Workshop Thiết Kế UI/UX Thực Chiến</p>
+                            <div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                                <i class="fa-regular fa-calendar text-pink-400"></i> 20.04.2026
+                            </div>
+                            <div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                                <i class="fa-solid fa-location-dot text-blue-400"></i> Cầu Giấy, Hà Nội
+                            </div>
+                            <div class="flex items-center justify-between pt-1">
+                                <span class="text-sm font-black text-[#F33B26]">Từ 300.000đ</span>
+                                <span class="text-[10px] bg-yellow-100 text-yellow-600 px-2 py-0.5 rounded-full font-bold">Sắp hết</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="event-detail.html" class="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
+                        <div class="relative aspect-video overflow-hidden">
+                            <img src="https://via.placeholder.com/400x225/E0E0FF/555?text=Event+3" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-black text-purple-500 uppercase">Sân khấu</div>
+                        </div>
+                        <div class="p-4 space-y-2">
+                            <p class="font-black text-gray-800 text-sm line-clamp-2 group-hover:text-pink-500 transition">Kịch Nói - Bức Tường & Những Người Bạn</p>
+                            <div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                                <i class="fa-regular fa-calendar text-pink-400"></i> 25.04.2026
+                            </div>
+                            <div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                                <i class="fa-solid fa-location-dot text-blue-400"></i> Nhà hát Tuổi Trẻ, HN
+                            </div>
+                            <div class="flex items-center justify-between pt-1">
+                                <span class="text-sm font-black text-[#F33B26]">Từ 200.000đ</span>
+                                <span class="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold">Còn vé</span>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="event-detail.html" class="group bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
+                        <div class="relative aspect-video overflow-hidden">
+                            <img src="https://via.placeholder.com/400x225/FFF3CD/555?text=Event+4" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-black text-orange-500 uppercase">Thể thao</div>
+                            <div class="absolute top-3 right-3 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black">HOT</div>
+                        </div>
+                        <div class="p-4 space-y-2">
+                            <p class="font-black text-gray-800 text-sm line-clamp-2 group-hover:text-pink-500 transition">MB Hanoi Cup 2026 - Giải Bóng Đá Phủi</p>
+                            <div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                                <i class="fa-regular fa-calendar text-pink-400"></i> 01.05.2026
+                            </div>
+                            <div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium">
+                                <i class="fa-solid fa-location-dot text-blue-400"></i> Sân Mỹ Đình, Hà Nội
+                            </div>
+                            <div class="flex items-center justify-between pt-1">
+                                <span class="text-sm font-black text-green-500">Miễn phí</span>
+                                <span class="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold">Còn vé</span>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <!-- ===== SECTION: KHÁM PHÁ THEO THỂ LOẠI (kiểu Ticketbox) ===== -->
+            <section class="space-y-6">
+                <h3 class="text-3xl font-black text-gray-800">KHÁM PHÁ THEO THỂ LOẠI</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <!-- TODO: mỗi ô link tới events.html?category=... -->
+                    <a href="events.html" class="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-14 h-14 rounded-2xl bg-pink-100 flex items-center justify-center group-hover:bg-pink-400 transition-colors duration-300">
+                            <i class="fa-solid fa-music text-2xl text-pink-400 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <span class="text-xs font-black text-gray-700 text-center">Âm nhạc</span>
+                    </a>
+                    <a href="events.html" class="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-400 transition-colors duration-300">
+                            <i class="fa-solid fa-masks-theater text-2xl text-purple-400 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <span class="text-xs font-black text-gray-700 text-center">Sân khấu</span>
+                    </a>
+                    <a href="events.html" class="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center group-hover:bg-blue-400 transition-colors duration-300">
+                            <i class="fa-solid fa-chalkboard-user text-2xl text-blue-400 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <span class="text-xs font-black text-gray-700 text-center">Workshop</span>
+                    </a>
+                    <a href="events.html" class="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center group-hover:bg-green-400 transition-colors duration-300">
+                            <i class="fa-solid fa-futbol text-2xl text-green-400 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <span class="text-xs font-black text-gray-700 text-center">Thể thao</span>
+                    </a>
+                    <a href="events.html" class="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-14 h-14 rounded-2xl bg-yellow-100 flex items-center justify-center group-hover:bg-yellow-400 transition-colors duration-300">
+                            <i class="fa-solid fa-person-hiking text-2xl text-yellow-500 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <span class="text-xs font-black text-gray-700 text-center">Tham quan</span>
+                    </a>
+                    <a href="events.html" class="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                        <div class="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center group-hover:bg-orange-400 transition-colors duration-300">
+                            <i class="fa-solid fa-mug-hot text-2xl text-orange-400 group-hover:text-white transition-colors"></i>
+                        </div>
+                        <span class="text-xs font-black text-gray-700 text-center">Hội thảo</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- ===== SECTION: SỰ KIỆN MIỄN PHÍ ===== -->
+            <section class="space-y-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-3xl font-black text-gray-800">SỰ KIỆN MIỄN PHÍ 🎉</h3>
+                        <p class="text-sm text-gray-400 font-medium mt-1">Tham gia hoàn toàn miễn phí, chỉ cần đăng ký</p>
+                    </div>
+                    <a href="events.html" class="text-sm font-bold text-pink-500 hover:text-pink-600 flex items-center gap-1 transition">
+                        Xem tất cả <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+                <div class="space-y-3">
+                    <!-- TODO: thay bằng dữ liệu thật từ mockData.js -->
+                    <a href="event-detail.html" class="group flex items-center gap-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md hover:border-pink-200 transition-all duration-300">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+                            <img src="https://via.placeholder.com/64x64/FFDEE9/555?text=E" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-black text-gray-800 text-sm group-hover:text-pink-500 transition truncate">Lễ Hội Văn Hoá Dân Gian 2026</p>
+                            <p class="text-xs text-gray-400 mt-0.5"><i class="fa-regular fa-calendar mr-1 text-pink-400"></i>15.04.2026 · <i class="fa-solid fa-location-dot mx-1 text-blue-400"></i>Văn Miếu, Hà Nội</p>
+                        </div>
+                        <span class="text-xs font-black text-green-500 bg-green-50 px-3 py-1 rounded-full flex-shrink-0">Miễn phí</span>
+                    </a>
+                    <a href="event-detail.html" class="group flex items-center gap-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md hover:border-pink-200 transition-all duration-300">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+                            <img src="https://via.placeholder.com/64x64/B5FFFC/555?text=E" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-black text-gray-800 text-sm group-hover:text-pink-500 transition truncate">Tech Meetup Hà Nội - Tháng 4</p>
+                            <p class="text-xs text-gray-400 mt-0.5"><i class="fa-regular fa-calendar mr-1 text-pink-400"></i>22.04.2026 · <i class="fa-solid fa-location-dot mx-1 text-blue-400"></i>Hà Nội</p>
+                        </div>
+                        <span class="text-xs font-black text-green-500 bg-green-50 px-3 py-1 rounded-full flex-shrink-0">Miễn phí</span>
+                    </a>
+                    <a href="event-detail.html" class="group flex items-center gap-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md hover:border-pink-200 transition-all duration-300">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0">
+                            <img src="https://via.placeholder.com/64x64/E0E0FF/555?text=E" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="font-black text-gray-800 text-sm group-hover:text-pink-500 transition truncate">Triển Lãm Nghệ Thuật Đương Đại</p>
+                            <p class="text-xs text-gray-400 mt-0.5"><i class="fa-regular fa-calendar mr-1 text-pink-400"></i>28.04.2026 · <i class="fa-solid fa-location-dot mx-1 text-blue-400"></i>Bảo tàng Mỹ thuật, HN</p>
+                        </div>
+                        <span class="text-xs font-black text-green-500 bg-green-50 px-3 py-1 rounded-full flex-shrink-0">Miễn phí</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- ===== SECTION: BANNER QUẢNG CÁO / NỔI BẬT ===== -->
+            <section>
+                <!-- TODO: thay bằng banner thật của dự án -->
+                <div class="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#F33B26] to-[#ff8c69] p-10 flex items-center justify-between shadow-xl">
+                    <div class="space-y-3 text-white">
+                        <p class="text-xs font-black uppercase tracking-widest opacity-80">Đừng bỏ lỡ</p>
+                        <h3 class="text-4xl font-black leading-tight">TẠO SỰ KIỆN<br>CỦA BẠN</h3>
+                        <p class="text-sm opacity-80 font-medium">Dễ dàng tạo và quản lý sự kiện<br>ngay trên EventHub</p>
+                        <!-- TODO: link tới trang create-event.html -->
+                        <a href="create-event.html" class="inline-flex items-center gap-2 bg-white text-[#F33B26] px-6 py-3 rounded-xl font-black text-sm hover:scale-105 transition shadow-lg mt-2">
+                            <i class="fa-solid fa-plus-circle"></i> Tạo ngay miễn phí
+                        </a>
+                    </div>
+                    <div class="hidden md:block text-white/20 text-[160px] font-black leading-none select-none">🎪</div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- ===== FOOTER ĐẦY ĐỦ ===== -->
+    <footer class="mt-20 bg-[#1a1a1a] text-white">
+        <!-- Newsletter -->
+        <div class="border-b border-white/10 py-10">
+            <div class="max-w-[1400px] mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                <div>
+                    <h4 class="text-xl font-black">Đăng ký nhận tin 📬</h4>
+                    <p class="text-gray-400 text-sm mt-1">Nhận thông báo sự kiện mới nhất mỗi tuần</p>
+                </div>
+                <div class="flex gap-2 w-full md:w-auto">
+                    <!-- TODO: xử lý form đăng ký newsletter -->
+                    <input type="email" placeholder="Email của bạn..."
+                           class="flex-1 md:w-72 bg-white/10 border border-white/20 rounded-full px-5 py-2.5 text-sm font-medium outline-none focus:border-pink-400 transition placeholder-gray-500">
+                    <button class="bg-[#F33B26] text-white px-6 py-2.5 rounded-full font-black text-sm hover:bg-red-500 transition">Đăng ký</button>
+                </div>
+            </div>
+        </div>
+        <!-- Footer links -->
+        <div class="max-w-[1400px] mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div class="col-span-2 md:col-span-1 space-y-4">
+                <h2 class="text-2xl font-black text-[#F33B26]">EventHub</h2>
+                <p class="text-gray-400 text-sm leading-relaxed">Nền tảng mua bán vé sự kiện hàng đầu Việt Nam.</p>
+                <div class="flex gap-3">
+                    <!-- TODO: link mạng xã hội thật -->
+                    <a href="#" class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-pink-500 transition"><i class="fa-brands fa-facebook-f text-sm"></i></a>
+                    <a href="#" class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-pink-500 transition"><i class="fa-brands fa-instagram text-sm"></i></a>
+                    <a href="#" class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-pink-500 transition"><i class="fa-brands fa-tiktok text-sm"></i></a>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <h5 class="font-black text-sm uppercase tracking-wider">Khám phá</h5>
+                <!-- TODO: link từng mục -->
+                <div class="space-y-2 text-sm text-gray-400">
+                    <a href="events.html" class="block hover:text-white transition">Sự kiện</a>
+                    <a href="calendar.html" class="block hover:text-white transition">Lịch sự kiện</a>
+                    <a href="blog.html" class="block hover:text-white transition">Blog</a>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <h5 class="font-black text-sm uppercase tracking-wider">Tài khoản</h5>
+                <div class="space-y-2 text-sm text-gray-400">
+                    <!-- TODO: link từng mục -->
+                    <a href="login.html" class="block hover:text-white transition">Đăng nhập</a>
+                    <a href="register.html" class="block hover:text-white transition">Đăng ký</a>
+                    <a href="dashboard.html" class="block hover:text-white transition">Dashboard</a>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <h5 class="font-black text-sm uppercase tracking-wider">Liên hệ</h5>
+                <div class="space-y-2 text-sm text-gray-400">
+                    <!-- TODO: thay thông tin thật của nhóm -->
+                    <p class="flex items-center gap-2"><i class="fa-solid fa-envelope text-pink-400"></i> info@eventhub.vn</p>
+                    <p class="flex items-center gap-2"><i class="fa-solid fa-phone text-pink-400"></i> 0123 456 789</p>
+                    <p class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-pink-400"></i> Hà Nội, Việt Nam</p>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-white/10 py-5 text-center text-gray-500 text-xs font-medium">
+            <p>© 2026 EventHub - Trải nghiệm sự kiện tuyệt vời nhất</p>
+        </div>
+    </footer>
+<script>
+    // ===== DARK/LIGHT MODE =====
+    function toggleTheme() {
+        const html = document.documentElement;
+        const icon = document.getElementById('theme-icon');
+        html.classList.toggle('dark');
+        const isDark = html.classList.contains('dark');
+        icon.className = isDark
+            ? 'fa-solid fa-sun text-yellow-300 text-sm'
+            : 'fa-solid fa-moon text-gray-500 text-sm';
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    }
+    (function() {
+        const saved = localStorage.getItem('theme');
+        if (saved === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.addEventListener('DOMContentLoaded', () => {
+                const icon = document.getElementById('theme-icon');
+                if (icon) icon.className = 'fa-solid fa-sun text-yellow-300 text-sm';
+            });
+        }
+    })();
+
+    // ===== SEARCH SUGGESTIONS =====
+    const searchInput = document.getElementById('search-input');
+    const suggestions = document.getElementById('search-suggestions');
+
+    searchInput.addEventListener('focus', () => {
+        suggestions.classList.remove('hidden');
+    });
+    document.addEventListener('click', (e) => {
+        if (!searchInput.contains(e.target) && !suggestions.contains(e.target)) {
+            suggestions.classList.add('hidden');
+        }
+    });
+
+    // ===== LOCATION DROPDOWN =====
+    const locationBtn = document.getElementById('location-btn');
+    const locationDropdown = document.getElementById('location-dropdown');
+    const locationText = document.getElementById('location-text');
+
+    locationBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        locationDropdown.classList.toggle('hidden');
+    });
+    document.querySelectorAll('.location-option').forEach(opt => {
+        opt.addEventListener('click', () => {
+            locationText.textContent = opt.dataset.city;
+            locationDropdown.classList.add('hidden');
+        });
+    });
+    document.addEventListener('click', (e) => {
+        if (!locationBtn.contains(e.target)) {
+            locationDropdown.classList.add('hidden');
+        }
+    });
+</script>
+</body>
+</html>

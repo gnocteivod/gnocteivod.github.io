@@ -1,0 +1,14 @@
+p {
+    color:rgb(239, 239, 241);
+    background-color: rgb(0, 0, 0);
+    width: 50%;
+    font-size: 30px;
+}
+.ten_hong {
+    color: rgb(255, 0, 225);
+    font-size:30px;
+}
+#ten_son {
+    color:gray;
+    font-size: 50px;
+}

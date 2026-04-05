@@ -1,0 +1,22 @@
+/* 1. Element Selector: Tác động lên tất cả thẻ h2 */
+h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+/* 2. Class Selector: Tạo khung cho tất cả các thẻ có class "profile-card" */
+.profile-card {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  width: 300px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  border-left: 5px solid gray; /* Mặc định viền màu xám */
+}
+
+/* 3. ID Selector: Chỉ tác động riêng lên thẻ có id "admin-card" */
+#admin-card {
+  border-left: 5px solid #007bff; /* Ghi đè viền thành màu xanh dương */
+  background-color: #e7f3ff;      /* Đổi màu nền riêng cho Admin */
+}
