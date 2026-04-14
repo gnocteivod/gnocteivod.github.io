@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - EventHub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body{background:#111;color:#e5e7eb;font-family:'Inter',sans-serif;}
+        .sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;cursor:pointer;transition:all .2s;font-size:14px;font-weight:600;color:#9ca3af;}
+        .sidebar-item:hover{background:rgba(255,255,255,.07);color:#fff;}
+        .sidebar-item.active{background:rgba(0,242,254,.1);color:#00f2fe;}
+        .tab-status{padding:8px 20px;border-radius:999px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;border:none;}
+        .tab-status.active{background:#00f2fe;color:#000;}
+        .tab-status:not(.active){background:#222;color:#9ca3af;}
+        .tab-status:not(.active):hover{background:#2a2a2a;color:#fff;}
+        .sub-tab{padding-bottom:8px;font-size:14px;font-weight:700;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;color:#6b7280;}
+        .sub-tab.active{border-bottom-color:#00f2fe;color:#00f2fe;}
+        .ticket-card{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border:1px solid rgba(0,242,254,.2);border-radius:16px;overflow:hidden;transition:all .3s;cursor:pointer;}
+        .ticket-card:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,242,254,.15);}
+        .ticket-hole{width:20px;height:20px;border-radius:50%;background:#111;border:1px solid rgba(0,242,254,.2);flex-shrink:0;}
+        .ticket-dash{flex:1;border-top:2px dashed rgba(0,242,254,.2);}
+        .form-input{width:100%;background:#1e1e1e;border:1px solid #333;border-radius:10px;padding:12px 14px;color:#fff;outline:none;font-size:14px;transition:border .2s;}
+        .form-input:focus{border-color:#00f2fe;}
+        .form-label{font-size:12px;font-weight:700;color:#9ca3af;margin-bottom:6px;display:block;}
+        .btn-primary{background:linear-gradient(135deg,#00f2fe,#fb00ff);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-weight:700;cursor:pointer;transition:.2s;font-size:14px;}
+        .btn-primary:hover{opacity:.9;transform:translateY(-1px);}
+        .btn-secondary{background:#2a2a2a;color:#fff;border:1px solid #333;border-radius:10px;padding:12px 24px;font-weight:700;cursor:pointer;transition:.2s;font-size:14px;}
+        .btn-secondary:hover{border-color:#555;}
+        .topup-option{background:#1e1e1e;border:2px solid #333;border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:all .2s;font-weight:700;font-size:14px;color:#e5e7eb;}
+        .topup-option:hover,.topup-option.selected{border-color:#00f2fe;background:rgba(0,242,254,.08);color:#00f2fe;}
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+        .modal-box{background:#1a1a1a;border:1px solid #333;border-radius:20px;padding:32px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto;}
+        .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:700;}
+        .badge-success{background:rgba(74,222,128,.15);color:#4ade80;}
+        .badge-pending{background:rgba(251,191,36,.15);color:#fbbf24;}
+        .badge-cancelled{background:rgba(248,113,113,.15);color:#f87171;}
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header style="background:#1e6b3c" class="sticky top-0 z-50 shadow-lg">
+    <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between gap-6">
+        <a href="../index.html" class="text-2xl font-black text-white tracking-tight">EventHub</a>
+        <div class="flex-1 max-w-md">
+            <div class="flex items-center bg-white rounded-full overflow-hidden">
+                <i class="fa-solid fa-magnifying-glass text-gray-400 ml-4 mr-2 text-sm"></i>
+                <input type="text" placeholder="Bạn tìm gì hôm nay?" class="flex-1 py-2 text-sm text-gray-700 outline-none bg-transparent">
+                <a href="../events.html" class="bg-green-400 text-black px-4 py-2 font-black text-sm hover:bg-green-300 transition rounded-r-full">Tìm</a>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <a href="dashboard.html" class="text-white font-bold text-sm border-b-2 border-white flex items-center gap-2">
+                <i class="fa-solid fa-ticket"></i><span class="hidden sm:inline">Vé của tôi</span>
+            </a>
+            <div class="relative" id="hdr-wrap">
+                <button onclick="document.getElementById('hdr-dd').classList.toggle('hidden')" class="flex items-center gap-2 bg-white/10 rounded-full px-3 py-1.5 hover:bg-white/20 transition">
+                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center text-white text-xs font-black" id="hdr-initial">U</div>
+                    <span class="text-white text-xs font-bold" id="hdr-name">User</span>
+                    <i class="fa-solid fa-chevron-down text-white text-xs"></i>
+                </button>
+                <div id="hdr-dd" class="hidden absolute right-0 top-[130%] bg-[#1e1e1e] border border-white/10 rounded-2xl shadow-2xl py-2 min-w-[190px] z-50">
+                    <button onclick="showTab('tickets')" class="w-full text-left px-4 py-2.5 hover:bg-white/10 text-sm text-gray-300 flex items-center gap-2"><i class="fa-solid fa-ticket text-green-400 w-4"></i>Vé của tôi</button>
+                    <button onclick="showTab('profile')" class="w-full text-left px-4 py-2.5 hover:bg-white/10 text-sm text-gray-300 flex items-center gap-2"><i class="fa-solid fa-user text-blue-400 w-4"></i>Cập nhật hồ sơ</button>
+                    <button onclick="showTab('password')" class="w-full text-left px-4 py-2.5 hover:bg-white/10 text-sm text-gray-300 flex items-center gap-2"><i class="fa-solid fa-lock text-purple-400 w-4"></i>Đổi mật khẩu</button>
+                    <button onclick="showTab('topup')" class="w-full text-left px-4 py-2.5 hover:bg-white/10 text-sm text-gray-300 flex items-center gap-2"><i class="fa-solid fa-wallet text-yellow-400 w-4"></i>Nạp tiền</button>
+                    <div class="border-t border-white/10 mt-1 pt-1">
+                        <button onclick="logout()" class="w-full text-left px-4 py-2.5 hover:bg-red-500/10 text-sm text-red-400 font-bold flex items-center gap-2"><i class="fa-solid fa-right-from-bracket w-4"></i>Đăng xuất</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<div class="max-w-6xl mx-auto px-6 py-8">
+    <!-- Breadcrumb -->
+    <div class="flex items-center gap-2 text-sm text-gray-500 mb-8">
+        <a href="../index.html" class="hover:text-white transition">Trang chủ</a>
+        <i class="fa-solid fa-chevron-right text-xs"></i>
+        <span class="text-white font-bold" id="breadcrumb-label">Vé của tôi</span>
+    </div>
+
+    <div class="flex gap-8">
+        <!-- SIDEBAR -->
+        <aside class="w-60 flex-shrink-0">
+            <div class="bg-[#1a1a1a] border border-white/10 rounded-2xl p-5 mb-4 text-center">
+                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center text-white text-2xl font-black mx-auto mb-3" id="sb-initial">U</div>
+                <p class="font-black text-white" id="sb-name">Người dùng</p>
+                <p class="text-xs text-gray-400 mt-0.5 truncate" id="sb-email">email</p>
+                <div class="mt-3 bg-green-500/10 border border-green-500/20 rounded-xl px-3 py-2">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Số dư</p>
+                    <p class="text-xl font-black text-green-400" id="sb-balance">0đ</p>
+                </div>
+            </div>
+            <nav class="space-y-1">
+                <div class="sidebar-item active" id="nav-tickets" onclick="showTab('tickets')"><i class="fa-solid fa-ticket w-4"></i>Vé của tôi</div>
+                <div class="sidebar-item" id="nav-profile" onclick="showTab('profile')"><i class="fa-solid fa-user w-4"></i>Cập nhật hồ sơ</div>
+                <div class="sidebar-item" id="nav-password" onclick="showTab('password')"><i class="fa-solid fa-lock w-4"></i>Đổi mật khẩu</div>
+                <div class="sidebar-item" id="nav-topup" onclick="showTab('topup')"><i class="fa-solid fa-wallet w-4"></i>Nạp tiền</div>
+                <div id="nav-admin-wrap" class="hidden">
+                    <a href="../admin.html" class="sidebar-item block" style="color:#fbbf24"><i class="fa-solid fa-shield-halved w-4"></i>Quản trị Admin</a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-1 min-w-0">
+
+            <!-- TAB: VÉ CỦA TÔI -->
+            <div id="tab-tickets">
+                <h1 class="text-2xl font-black text-white mb-6">Vé của tôi</h1>
+                <div class="flex gap-2 mb-6 flex-wrap">
+                    <button class="tab-status active" onclick="filterTickets('all',this)">Tất cả</button>
+                    <button class="tab-status" onclick="filterTickets('success',this)">Thành công</button>
+                    <button class="tab-status" onclick="filterTickets('processing',this)">Đang xử lý</button>
+                    <button class="tab-status" onclick="filterTickets('cancelled',this)">Đã hủy</button>
+                </div>
+                <div class="flex gap-6 border-b border-white/10 mb-6">
+                    <button class="sub-tab active" onclick="filterTime('upcoming',this)">Sắp diễn ra</button>
+                    <button class="sub-tab" onclick="filterTime('ended',this)">Đã kết thúc</button>
+                </div>
+                <div id="ticket-container"></div>
+                <!-- Gợi ý -->
+                <div class="mt-12">
+                    <h3 class="text-base font-black text-white mb-4 text-center">Có thể bạn cũng thích</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <a href="../event-detail.html" class="group space-y-2"><div class="rounded-xl overflow-hidden aspect-video"><img src="https://via.placeholder.com/280x160/FFDEE9/555?text=Event" class="w-full h-full object-cover group-hover:scale-105 transition"></div><p class="text-xs font-bold text-gray-300 group-hover:text-white">Concert Cực Hott 2026</p><p class="text-xs text-green-400 font-black">Từ 500.000đ</p></a>
+                        <a href="../event-detail.html" class="group space-y-2"><div class="rounded-xl overflow-hidden aspect-video"><img src="https://via.placeholder.com/280x160/B5FFFC/555?text=Event" class="w-full h-full object-cover group-hover:scale-105 transition"></div><p class="text-xs font-bold text-gray-300 group-hover:text-white">Workshop UI/UX</p><p class="text-xs text-green-400 font-black">Từ 300.000đ</p></a>
+                        <a href="../event-detail.html" class="group space-y-2"><div class="rounded-xl overflow-hidden aspect-video"><img src="https://via.placeholder.com/280x160/E0E0FF/555?text=Event" class="w-full h-full object-cover group-hover:scale-105 transition"></div><p class="text-xs font-bold text-gray-300 group-hover:text-white">Kịch Nói Bức Tường</p><p class="text-xs text-green-400 font-black">Từ 200.000đ</p></a>
+                        <a href="../event-detail.html" class="group space-y-2"><div class="rounded-xl overflow-hidden aspect-video"><img src="https://via.placeholder.com/280x160/FFF3CD/555?text=Event" class="w-full h-full object-cover group-hover:scale-105 transition"></div><p class="text-xs font-bold text-gray-300 group-hover:text-white">MB Hanoi Cup 2026</p><p class="text-xs text-green-400 font-black">Miễn phí</p></a>
+                    </div>
+                    <div class="flex justify-center mt-6">
+                        <a href="../events.html" class="border-2 border-green-400 text-green-400 px-10 py-2.5 rounded-full font-black text-sm hover:bg-green-400 hover:text-black transition">Xem thêm sự kiện</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: CẬP NHẬT HỒ SƠ -->
+            <div id="tab-profile" class="hidden">
+                <h1 class="text-2xl font-black text-white mb-6">Cập nhật hồ sơ</h1>
+                <div class="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 max-w-lg">
+                    <div class="space-y-4">
+                        <div><label class="form-label">Họ và tên *</label><input class="form-input" id="p-name" placeholder="Nguyễn Văn A"></div>
+                        <div><label class="form-label">Email *</label><input class="form-input" id="p-email" type="email" placeholder="email@example.com"></div>
+                        <div><label class="form-label">Số điện thoại</label><input class="form-input" id="p-phone" placeholder="0901 234 567"></div>
+                        <div><label class="form-label">Địa chỉ</label><input class="form-input" id="p-address" placeholder="Số nhà, đường, quận, thành phố"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="form-label">Ngày sinh</label><input class="form-input" id="p-dob" type="date"></div>
+                            <div><label class="form-label">Giới tính</label>
+                                <select class="form-input" id="p-gender" style="cursor:pointer">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="male">Nam</option>
+                                    <option value="female">Nữ</option>
+                                    <option value="other">Khác</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="profile-msg" class="hidden text-sm font-bold py-2 px-4 rounded-lg mt-4"></div>
+                    <div class="flex gap-3 mt-5">
+                        <button class="btn-primary flex-1" onclick="saveProfile()">Lưu thay đổi</button>
+                        <button class="btn-secondary" onclick="loadProfile()">Đặt lại</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: ĐỔI MẬT KHẨU -->
+            <div id="tab-password" class="hidden">
+                <h1 class="text-2xl font-black text-white mb-6">Đổi mật khẩu</h1>
+                <div class="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 max-w-lg space-y-4">
+                    <div class="relative">
+                        <label class="form-label">Mật khẩu hiện tại *</label>
+                        <input class="form-input" id="pw-old" type="password" placeholder="Nhập mật khẩu cũ" style="padding-right:44px">
+                        <span onclick="togglePW('pw-old',this)" class="absolute right-3 cursor-pointer text-gray-500 hover:text-white text-sm" style="top:42px">👁</span>
+                    </div>
+                    <div class="relative">
+                        <label class="form-label">Mật khẩu mới *</label>
+                        <input class="form-input" id="pw-new" type="password" placeholder="Tối thiểu 6 ký tự" style="padding-right:44px">
+                        <span onclick="togglePW('pw-new',this)" class="absolute right-3 cursor-pointer text-gray-500 hover:text-white text-sm" style="top:42px">👁</span>
+                    </div>
+                    <div class="relative">
+                        <label class="form-label">Xác nhận mật khẩu mới *</label>
+                        <input class="form-input" id="pw-confirm" type="password" placeholder="Nhập lại mật khẩu mới" style="padding-right:44px">
+                        <span onclick="togglePW('pw-confirm',this)" class="absolute right-3 cursor-pointer text-gray-500 hover:text-white text-sm" style="top:42px">👁</span>
+                    </div>
+                    <div id="pw-msg" class="hidden text-sm font-bold py-2 px-4 rounded-lg"></div>
+                    <button class="btn-primary w-full" onclick="changePassword()">Cập nhật mật khẩu</button>
+                </div>
+            </div>
+
+            <!-- TAB: NẠP TIỀN -->
+            <div id="tab-topup" class="hidden">
+                <h1 class="text-2xl font-black text-white mb-1">Nạp tiền</h1>
+                <p class="text-gray-400 text-sm mb-6">Số dư hiện tại: <span class="text-green-400 font-black text-base" id="topup-balance-display">0đ</span></p>
+                <div class="bg-[#1a1a1a] border border-white/10 rounded-2xl p-6 max-w-lg space-y-5">
+                    <div>
+                        <label class="form-label mb-3">Chọn mệnh giá nạp</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="topup-option" onclick="selectTopup(50000,this)">50.000đ</div>
+                            <div class="topup-option" onclick="selectTopup(100000,this)">100.000đ</div>
+                            <div class="topup-option" onclick="selectTopup(200000,this)">200.000đ</div>
+                            <div class="topup-option" onclick="selectTopup(500000,this)">500.000đ</div>
+                            <div class="topup-option" onclick="selectTopup(1000000,this)">1.000.000đ</div>
+                            <div class="topup-option" onclick="selectTopup(2000000,this)">2.000.000đ</div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label">Hoặc nhập số tiền tùy ý (VNĐ)</label>
+                        <input class="form-input" id="topup-custom" type="number" placeholder="Nhập số tiền (tối thiểu 10.000)..." min="10000" oninput="customTopup(this.value)">
+                    </div>
+                    <div class="bg-white/5 rounded-xl p-4 flex justify-between items-center">
+                        <span class="text-gray-400 text-sm font-bold">Số tiền sẽ nạp:</span>
+                        <span class="text-green-400 font-black text-xl" id="topup-amount-display">0đ</span>
+                    </div>
+                    <div id="topup-msg" class="hidden text-sm font-bold py-2 px-4 rounded-lg"></div>
+                    <button class="btn-primary w-full text-base py-3" onclick="requestTopup()">
+                        <i class="fa-solid fa-paper-plane mr-2"></i>Gửi yêu cầu nạp tiền
+                    </button>
+                    <p class="text-xs text-gray-500 text-center">Yêu cầu sẽ được Admin xác nhận và cộng vào tài khoản của bạn</p>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- MODAL CHI TIẾT VÉ -->
+<div id="ticket-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+        <div class="flex justify-between items-center mb-5">
+            <h2 class="text-xl font-black text-white">Chi tiết vé</h2>
+            <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-gray-400 hover:text-white flex items-center justify-center transition">✕</button>
+        </div>
+        <div id="modal-content"></div>
+    </div>
+</div>
+
+<script>
+const user = JSON.parse(localStorage.getItem('currentUser') || 'null');
+if (!user) { window.location.href = 'login.html'; }
+
+const fmt = v => parseInt(v||0).toLocaleString('vi-VN') + 'đ';
+
+function initUI() {
+    const name    = user.name  || 'Người dùng';
+    const email   = user.email || '';
+    const balance = parseInt(localStorage.getItem('userBalance') || '0');
+    document.getElementById('hdr-initial').textContent = name[0].toUpperCase();
+    document.getElementById('hdr-name').textContent    = name;
+    document.getElementById('sb-initial').textContent  = name[0].toUpperCase();
+    document.getElementById('sb-name').textContent     = name;
+    document.getElementById('sb-email').textContent    = email;
+    document.getElementById('sb-balance').textContent  = fmt(balance);
+    document.getElementById('topup-balance-display').textContent = fmt(balance);
+    if (user.role === 'admin') document.getElementById('nav-admin-wrap').classList.remove('hidden');
+}
+initUI();
+
+// TABS
+const TABS = ['tickets','profile','password','topup'];
+function showTab(tab) {
+    TABS.forEach(t => {
+        document.getElementById('tab-'+t).classList.add('hidden');
+        const n = document.getElementById('nav-'+t);
+        if (n) n.classList.remove('active');
+    });
+    document.getElementById('tab-'+tab).classList.remove('hidden');
+    const n = document.getElementById('nav-'+tab);
+    if (n) n.classList.add('active');
+    const labels = {tickets:'Vé của tôi',profile:'Cập nhật hồ sơ',password:'Đổi mật khẩu',topup:'Nạp tiền'};
+    document.getElementById('breadcrumb-label').textContent = labels[tab]||tab;
+    if (tab==='profile') loadProfile();
+    if (tab==='tickets') renderTickets('all','upcoming');
+    document.getElementById('hdr-dd').classList.add('hidden');
+}
+const urlTab = new URLSearchParams(location.search).get('tab');
+showTab(TABS.includes(urlTab) ? urlTab : 'tickets');
+
+function logout() {
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('isLoggedIn');
+    window.location.href = '../index.html';
+}
+
+// VÉ
+let curStatus='all', curTime='upcoming';
+function filterTickets(s,btn) { curStatus=s; document.querySelectorAll('.tab-status').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderTickets(curStatus,curTime); }
+function filterTime(t,btn) { curTime=t; document.querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderTickets(curStatus,curTime); }
+
+function renderTickets(status, time) {
+    const bookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+    const now = new Date();
+    const list = bookings.filter(b => {
+        if (status !== 'all' && b.status !== status) return false;
+        const d = new Date(b.eventDate);
+        if (time === 'upcoming') return d >= now;
+        if (time === 'ended')    return d < now;
+        return true;
+    });
+    const c = document.getElementById('ticket-container');
+    if (!list.length) {
+        c.innerHTML = `<div class="flex flex-col items-center py-16 gap-4">
+            <div class="text-7xl">🎫</div>
+            <p class="text-gray-400">Bạn chưa có vé nào</p>
+            <a href="../events.html" class="bg-green-400 text-black px-8 py-2.5 rounded-full font-black text-sm hover:bg-green-300 transition mt-1">Mua vé ngay</a>
+        </div>`;
+        return;
+    }
+    const badgeMap = {success:'badge-success',processing:'badge-pending',cancelled:'badge-cancelled'};
+    const labelMap = {success:'Thành công',processing:'Đang xử lý',cancelled:'Đã hủy'};
+    c.innerHTML = list.map((b,i)=>`
+    <div class="ticket-card mb-4" onclick="openTicket(${i})">
+        <div class="flex">
+            <div class="w-36 flex-shrink-0 relative" style="min-height:130px">
+                <img src="${b.eventImg||'https://via.placeholder.com/144x130/0f3460/00f2fe?text=🎵'}" class="w-full h-full object-cover absolute inset-0">
+                <div class="absolute inset-0" style="background:linear-gradient(to right,transparent,#1a1a2e)"></div>
+            </div>
+            <div class="flex-1 p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-black text-white text-sm leading-tight" style="max-width:200px">${b.eventName||'Sự kiện'}</h4>
+                    <span class="badge ${badgeMap[b.status]||'badge-success'} ml-2 flex-shrink-0">${labelMap[b.status]||'Thành công'}</span>
+                </div>
+                <div class="space-y-1 text-xs text-gray-400 mb-3">
+                    <div><i class="fa-regular fa-calendar mr-1.5 text-cyan-400"></i>${b.eventDate||'—'}</div>
+                    <div><i class="fa-solid fa-location-dot mr-1.5 text-pink-400"></i>${b.eventLocation||'—'}</div>
+                    <div><i class="fa-solid fa-couch mr-1.5 text-blue-400"></i>Ghế: ${(b.seats||[]).join(', ')||'—'}</div>
+                </div>
+                <div class="flex items-center gap-2 my-2">
+                    <div class="ticket-hole"></div>
+                    <div class="ticket-dash"></div>
+                    <div class="ticket-hole"></div>
+                </div>
+                <div class="flex justify-between items-center mt-2">
+                    <span class="text-cyan-400 font-black text-sm">${fmt(b.price*(b.seats?.length||1))}</span>
+                    <button class="text-xs border border-cyan-400/40 text-cyan-400 px-4 py-1.5 rounded-full hover:bg-cyan-400/10 transition font-bold">Xem vé →</button>
+                </div>
+            </div>
+        </div>
+    </div>`).join('');
+}
+
+function openTicket(i) {
+    const b = JSON.parse(localStorage.getItem('bookings')||'[]')[i];
+    if (!b) return;
+    const total = fmt(b.price*(b.seats?.length||1));
+    const statusMap = {success:'✅ Thành công',processing:'⏳ Đang xử lý',cancelled:'❌ Đã hủy'};
+    document.getElementById('modal-content').innerHTML = `
+    <div style="background:linear-gradient(135deg,#0f3460,#16213e);border-radius:16px;overflow:hidden;border:1px solid rgba(0,242,254,.3)">
+        <div style="background:linear-gradient(135deg,rgba(0,242,254,.1),rgba(251,0,255,.08));padding:20px;border-bottom:2px dashed rgba(0,242,254,.2)">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                <div>
+                    <div style="color:#00f2fe;font-size:10px;font-weight:900;letter-spacing:3px;margin-bottom:6px">EVENTHUB • E-TICKET</div>
+                    <div style="color:#fff;font-size:18px;font-weight:900;line-height:1.3">${b.eventName||'Sự kiện'}</div>
+                </div>
+                <div style="text-align:right">
+                    <div style="color:#6b7280;font-size:10px">MÃ VÉ</div>
+                    <div style="color:#00f2fe;font-weight:900;font-size:13px;letter-spacing:1px">#${b.bookingId||'EVH'+Date.now().toString().slice(-6)}</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            <div><div style="color:#6b7280;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Ngày diễn ra</div><div style="color:#fff;font-weight:700">${b.eventDate||'—'}</div></div>
+            <div><div style="color:#6b7280;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Địa điểm</div><div style="color:#fff;font-weight:700">${b.eventLocation||'—'}</div></div>
+            <div><div style="color:#6b7280;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Ghế đã chọn</div><div style="color:#00f2fe;font-weight:900">${(b.seats||[]).join(', ')||'—'}</div></div>
+            <div><div style="color:#6b7280;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Số lượng</div><div style="color:#fff;font-weight:700">${(b.seats||[]).length||1} vé</div></div>
+            <div><div style="color:#6b7280;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Người mua</div><div style="color:#fff;font-weight:700">${b.buyerName||user.name||'—'}</div></div>
+            <div><div style="color:#6b7280;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Trạng thái</div><div style="font-weight:700">${statusMap[b.status]||'✅ Thành công'}</div></div>
+        </div>
+        <div style="display:flex;align-items:center;padding:0 20px">
+            <div style="width:22px;height:22px;border-radius:50%;background:#111;border:1px solid rgba(0,242,254,.2)"></div>
+            <div style="flex:1;border-top:2px dashed rgba(0,242,254,.2)"></div>
+            <div style="width:22px;height:22px;border-radius:50%;background:#111;border:1px solid rgba(0,242,254,.2)"></div>
+        </div>
+        <div style="padding:20px;display:flex;justify-content:space-between;align-items:center">
+            <div>
+                <div style="color:#6b7280;font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:4px">Tổng tiền</div>
+                <div style="color:#00f2fe;font-weight:900;font-size:24px">${total}</div>
+            </div>
+            <div style="width:72px;height:72px;background:#fff;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px">
+                <div style="font-size:8px;color:#000;font-weight:900">QR CODE</div>
+                <div style="font-size:20px">▪▫▪</div>
+                <div style="font-size:8px;color:#000;font-weight:700">Scan để vào</div>
+            </div>
+        </div>
+    </div>
+    <p style="color:#6b7280;font-size:11px;text-align:center;margin-top:10px">Vui lòng xuất trình vé này tại cổng vào sự kiện</p>`;
+    document.getElementById('ticket-modal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('ticket-modal').classList.add('hidden'); }
+
+// HỒ SƠ
+function loadProfile() {
+    const p = JSON.parse(localStorage.getItem('userProfile')||'{}');
+    document.getElementById('p-name').value    = user.name||p.name||'';
+    document.getElementById('p-email').value   = user.email||p.email||'';
+    document.getElementById('p-phone').value   = user.phone||p.phone||'';
+    document.getElementById('p-address').value = p.address||'';
+    document.getElementById('p-dob').value     = p.dob||'';
+    document.getElementById('p-gender').value  = p.gender||'';
+}
+function saveProfile() {
+    const p = {
+        name:document.getElementById('p-name').value.trim(),
+        email:document.getElementById('p-email').value.trim(),
+        phone:document.getElementById('p-phone').value.trim(),
+        address:document.getElementById('p-address').value.trim(),
+        dob:document.getElementById('p-dob').value,
+        gender:document.getElementById('p-gender').value
+    };
+    if (!p.name) { showMsg('profile-msg','Vui lòng nhập họ tên!','error'); return; }
+    localStorage.setItem('userProfile', JSON.stringify(p));
+    Object.assign(user, {name:p.name,email:p.email,phone:p.phone});
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    localStorage.setItem('storedName', p.name);
+    localStorage.setItem('storedEmail', p.email);
+    localStorage.setItem('storedPhone', p.phone);
+    initUI();
+    showMsg('profile-msg','✅ Cập nhật hồ sơ thành công!','success');
+}
+
+// ĐỔI MẬT KHẨU
+function togglePW(id, icon) {
+    const inp = document.getElementById(id);
+    inp.type = inp.type==='password'?'text':'password';
+    icon.textContent = inp.type==='password'?'👁':'🙈';
+}
+function changePassword() {
+    const o=document.getElementById('pw-old').value, n=document.getElementById('pw-new').value, c=document.getElementById('pw-confirm').value;
+    const stored=localStorage.getItem('storedPass')||'';
+    if(!o||!n||!c){showMsg('pw-msg','Vui lòng điền đủ thông tin!','error');return;}
+    if(o!==stored){showMsg('pw-msg','❌ Mật khẩu hiện tại không đúng!','error');return;}
+    if(n.length<6){showMsg('pw-msg','Mật khẩu mới phải có ít nhất 6 ký tự!','error');return;}
+    if(n!==c){showMsg('pw-msg','❌ Mật khẩu xác nhận không khớp!','error');return;}
+    localStorage.setItem('storedPass',n);
+    ['pw-old','pw-new','pw-confirm'].forEach(id=>document.getElementById(id).value='');
+    showMsg('pw-msg','✅ Đổi mật khẩu thành công!','success');
+}
+
+// NẠP TIỀN
+let topupAmt=0;
+function selectTopup(amt,el){document.querySelectorAll('.topup-option').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');topupAmt=amt;document.getElementById('topup-custom').value='';document.getElementById('topup-amount-display').textContent=fmt(amt);}
+function customTopup(v){document.querySelectorAll('.topup-option').forEach(o=>o.classList.remove('selected'));topupAmt=parseInt(v)||0;document.getElementById('topup-amount-display').textContent=fmt(topupAmt);}
+function requestTopup(){
+    if(topupAmt<10000){showMsg('topup-msg','Số tiền tối thiểu là 10.000đ!','error');return;}
+    const reqs=JSON.parse(localStorage.getItem('topupRequests')||'[]');
+    reqs.push({id:'TU'+Date.now(),userName:user.name,userEmail:user.email,amount:topupAmt,status:'pending',time:new Date().toLocaleString('vi-VN')});
+    localStorage.setItem('topupRequests',JSON.stringify(reqs));
+    showMsg('topup-msg',`✅ Đã gửi yêu cầu nạp ${fmt(topupAmt)}! Admin sẽ xác nhận sớm.`,'success');
+    topupAmt=0; document.getElementById('topup-amount-display').textContent='0đ';
+    document.getElementById('topup-custom').value='';
+    document.querySelectorAll('.topup-option').forEach(o=>o.classList.remove('selected'));
+}
+
+// HELPER
+function showMsg(id,text,type){const el=document.getElementById(id);el.textContent=text;el.className='text-sm font-bold py-2 px-4 rounded-lg '+(type==='success'?'bg-green-500/20 text-green-400':'bg-red-500/20 text-red-400');el.classList.remove('hidden');setTimeout(()=>el.classList.add('hidden'),4000);}
+
+// CLOSE DROPDOWNS
+document.addEventListener('click',e=>{
+    const w=document.getElementById('hdr-wrap');
+    if(w&&!w.contains(e.target)) document.getElementById('hdr-dd').classList.add('hidden');
+});
+</script>
+</body>
+</html>

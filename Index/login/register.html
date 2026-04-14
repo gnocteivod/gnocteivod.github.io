@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="style.css">
+    <title>Đăng ký tài khoản</title>
+     <script type="text/javascript" src="https://cdn.jsdelivr.net"></script>
+</head>
+<body>
+    <div class="card">
+        <h2>Đăng ký</h2>
+        
+        <input type="text" id="reg_name" placeholder="Họ và Tên">
+        <input type="email" id="reg_email" placeholder="Email">
+        <input type="text" id="reg_phone" placeholder="Số điện thoại">
+        
+        <div class="otp-group">
+            <input type="text" id="otp_input" placeholder="Nhập mã 6 số">
+             <button type="button" class="btn-otp" onclick="testSend()">Gửi mã</button>
+        </div>
+        
+        <input type="password" id="reg_pass" placeholder="Mật khẩu">
+        
+        <button class="btn-main" onclick="handleRegister()">Tạo tài khoản</button>
+
+        <div class="divider">Hoặc đăng ký bằng</div>
+        
+        <div class="social-group">
+    
+    <a href="https://accounts.google.com" target="_blank" class="btn-social">
+    <img src="app/google.png" alt="Google">
+    <span>Google</span>
+    </a>
+
+    <a href="https://www.facebook.com" target="_blank" class="btn-social">
+        <img src="app/facebook.png" alt="Facebook">
+        <span>Facebook</span>
+    </a>
+    
+    <a href="https://www.tiktok.com" target="_blank" class="btn-social">
+        <img src="app/tiktok.png" alt="TikTok">
+        <span>TikTok</span>
+    </a>
+        </div>
+    <div class="link-switch">Đã có tài khoản? <a href="login.html">Đăng nhập</a></div>
+    
+    </div>
+    <script>
+        let codeMoi = null;
+
+        function testSend() {
+            const email = document.getElementById('email_test').value;
+            if (!email.includes('@')) {
+                alert("Bạn chưa nhập đúng Email!");
+                return;
+            }
+            
+            codeMoi = Math.floor(100000 + Math.random() * 900000);
+            alert("MÃ OTP CỦA BẠN LÀ: " + codeMoi);
+            console.log("Mã đã tạo:", codeMoi);
+        }
+
+        function testVerify() {
+            const nhapVao = document.getElementById('otp_input').value;
+            if (codeMoi && nhapVao == codeMoi) {
+                alert("CHÚC MỪNG! Mã đúng, đang chuyển trang...");
+            } else {
+                alert("Sai mã rồi! Thử lại nhé.");
+            }
+       } 
+       function verifyAndRegister() {
+    const email = document.getElementById('user_email').value;
+    const pass = document.getElementById('password').value; 
+    const userInput = document.getElementById('otp_input').value;
+    
+    if (userInput == generatedOTP) {
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userPass', pass);
+
+        alert("Đăng ký thành công! Dữ liệu đã được lưu.");
+        window.location.href = "login.html";
+    } else {
+        alert("Mã OTP không đúng!");
+    }
+       }
+       let generatedOTP = null;
+        function testSend() {
+            generatedOTP = Math.floor(100000 + Math.random() * 900000);
+            alert("Mã OTP của bạn là: " + generatedOTP);
+        }
+
+     function handleRegister() {
+            const name = document.getElementById('reg_name').value;
+            const email = document.getElementById('reg_email').value;
+            const phone = document.getElementById('reg_phone').value;
+            const pass = document.getElementById('reg_pass').value;
+            const otp = document.getElementById('otp_input').value;
+
+            if(!name || !email || !phone || !pass) return alert("Vui lòng điền đủ thông tin!");
+            if(otp != generatedOTP) return alert("Mã OTP không đúng!");
+
+            localStorage.setItem('storedName', name);
+            localStorage.setItem('storedEmail', email);
+            localStorage.setItem('storedPhone', phone);
+            localStorage.setItem('storedPass', pass);
+
+            alert("Đăng ký thành công!");
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>

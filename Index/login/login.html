@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Đăng nhập - EventHub</title>
+    <style>
+        .divider { display:flex;align-items:center;gap:12px;color:#555;font-size:13px;margin:20px 0; }
+        .divider::before,.divider::after { content:'';flex:1;height:1px;background:#2a2a2a; }
+        .social-group { display:flex;gap:10px;margin-bottom:10px; }
+        .btn-social { flex:1;display:flex;justify-content:center;align-items:center;gap:8px;text-decoration:none;background:#1e1e1e;border:1px solid #333;padding:10px;border-radius:8px;transition:0.3s;color:#fff;font-size:13px; }
+        .btn-social:hover { border-color:#00f2fe; }
+        .btn-social img { width:20px;height:20px;object-fit:contain; }
+        .input-wrap { position:relative;margin-bottom:15px; }
+        .input-wrap input { margin-bottom:0;width:100%;padding-right:44px; }
+        .toggle-pass { position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:#555;font-size:14px;user-select:none; }
+        .toggle-pass:hover { color:#00f2fe; }
+        #error-msg { background:#2a0000;border:1px solid #ff4d4d;color:#ff4d4d;border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none;text-align:left; }
+        .forgot { text-align:right;font-size:12px;margin-bottom:16px;margin-top:-8px; }
+        .forgot a { color:#00f2fe;text-decoration:none; }
+        .back-home { position:fixed;top:20px;left:20px; }
+        .back-home a { color:#888;font-size:13px;text-decoration:none;display:flex;align-items:center;gap:6px;transition:color 0.2s; }
+        .back-home a:hover { color:#fff; }
+    </style>
+</head>
+<body>
+    <div class="back-home">
+        <a href="../index.html">← Về trang chủ</a>
+    </div>
+    <div class="card">
+        <div style="font-size:26px;font-weight:900;color:#00f2fe;letter-spacing:-1px;margin-bottom:8px;">EventHub</div>
+        <h2>Đăng nhập</h2>
+        <p>Vui lòng đăng nhập để tiếp tục</p>
+        <div id="error-msg"></div>
+        <input type="text" id="login_user" placeholder="Email hoặc Số điện thoại" oninput="clearError()">
+        <div class="input-wrap">
+            <input type="password" id="login_pass" placeholder="Mật khẩu" oninput="clearError()" onkeydown="if(event.key==='Enter')handleLogin()">
+            <span class="toggle-pass" onclick="togglePass('login_pass',this)">👁</span>
+        </div>
+        <div class="forgot"><a href="#">Quên mật khẩu?</a></div>
+        <button type="button" class="btn-main" onclick="handleLogin()">Đăng nhập</button>
+        <div class="divider">Hoặc tiếp tục với</div>
+        <div class="social-group">
+            <a href="https://accounts.google.com" target="_blank" class="btn-social"><img src="app/google.png" alt="Google"><span>Google</span></a>
+            <a href="https://www.facebook.com" target="_blank" class="btn-social"><img src="app/facebook.png" alt="Facebook"><span>Facebook</span></a>
+            <a href="https://www.tiktok.com" target="_blank" class="btn-social"><img src="app/tiktok.png" alt="TikTok"><span>TikTok</span></a>
+        </div>
+        <div class="link-switch">Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a></div>
+    </div>
+    <script>
+        if (localStorage.getItem('isLoggedIn') === 'true') window.location.href = '../index.html';
+
+        function clearError() { document.getElementById('error-msg').style.display = 'none'; }
+
+        function togglePass(id, icon) {
+            const inp = document.getElementById(id);
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+            icon.textContent = inp.type === 'password' ? '👁' : '🙈';
+        }
+
+        function handleLogin() {
+            const u = document.getElementById('login_user').value.trim();
+            const p = document.getElementById('login_pass').value;
+            const err = document.getElementById('error-msg');
+            if (!u || !p) { err.textContent = '⚠ Vui lòng điền đầy đủ thông tin!'; err.style.display='block'; return; }
+
+            // Tài khoản admin test
+            if (u === 'admin' && p === 'admin123') {
+                save({ name:'Admin', email:'admin@eventhub.vn', phone:'', role:'admin' });
+                return;
+            }
+            const sEmail = localStorage.getItem('storedEmail') || '';
+            const sPhone = localStorage.getItem('storedPhone') || '';
+            const sPass  = localStorage.getItem('storedPass')  || '';
+            const sName  = localStorage.getItem('storedName')  || 'Người dùng';
+            if ((u === sEmail || u === sPhone) && p === sPass) {
+                save({ name:sName, email:sEmail, phone:sPhone, role:'user' });
+            } else {
+                err.textContent = '⚠ Email/SĐT hoặc Mật khẩu không đúng!'; err.style.display='block';
+            }
+        }
+
+        function save(user) {
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            localStorage.setItem('isLoggedIn', 'true');
+            if (!localStorage.getItem('userBalance')) localStorage.setItem('userBalance', '0');
+            window.location.href = '../index.html';
+        }
+    </script>
+</body>
+</html>
