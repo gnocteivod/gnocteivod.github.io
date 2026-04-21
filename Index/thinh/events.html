@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Event Web</title>
+  <link rel="stylesheet" href="events.css">
+</head>
+<body>
+
+<header class="navbar">
+  <h2>ticketbox</h2>
+
+  <div class="search-container">
+    <i class="search-icon">🔍</i>
+    <input type="text" placeholder="Tìm sự kiện..." class="search-box">
+  </div>
+
+  <div class="nav-actions">
+    <button onclick="openCreateEvent()">Tạo sự kiện</button>
+    <button onclick="openMyTickets()">Vé của tôi</button>
+    <button onclick="openLogin()">Đăng nhập</button>
+  </div>
+</header>
+
+<section class="hero">
+  <h1>Khám phá sự kiện hot 🔥</h1>
+</section>
+
+<!-- 🔥 HOT EVENTS -->
+<section class="hot-events">
+  <h2>🎬 Sự kiện đặc biệt</h2>
+  <div id="hotList" class="event-grid"></div>
+</section>
+
+<section class="categories">
+  <button onclick="renderEvents('all')">Tất cả</button>
+  <button onclick="renderEvents('Nhạc sống')">Nhạc sống</button>
+  <button onclick="renderEvents('Sân khấu & Nghệ thuật')">Sân khấu & Nghệ thuật</button>
+  <button onclick="renderEvents('Thể thao')">Thể thao</button>
+  <button onclick="renderEvents('Hội thảo & Workshop')">Hội thảo & Workshop</button>
+  <button onclick="renderEvents('Tham quan & Trải nghiệm')">Tham quan & Trải nghiệm</button>
+  <button onclick="renderEvents('Khác')">Khác</button>
+  <button onclick="renderEvents('Vé bán lại')">Vé bán lại</button>
+  <button onclick="renderEvents('Blog')">Blog</button>
+</section>
+
+<section class="filters">
+  <input type="date" id="filterDate">
+
+  <select id="filterLocation">
+    <option value="">Tất cả địa điểm</option>
+    <option value="Hà Nội">Hà Nội</option>
+    <option value="TP.HCM">TP.HCM</option>
+  </select>
+
+  <button onclick="applyFilters()">Lọc</button>
+</section>
+
+<section class="events">
+</section>
+
+<div class="slider-container">
+  <button class="prev">❮</button>
+
+  <div id="eventList" class="slider"></div>
+
+  <button class="next">❯</button>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal">
+  <div class="modal-content">
+    <span onclick="closeModal()">×</span>
+    <h2 id="title"></h2>
+    <p id="desc"></p>
+  </div>
+</div>
+
+<!-- LOGIN -->
+<div id="login" class="modal">
+  <div class="modal-content">
+    <span onclick="closeLogin()">×</span>
+    <h3>Đăng nhập</h3>
+    <input placeholder="Email"><br>
+    <input type="password" placeholder="Mật khẩu"><br>
+    <button>Đăng nhập</button>
+  </div>
+</div>
+
+<script src="events.js"></script>
+<footer class="footer">
+  <div class="footer-top">
+
+    <!-- CỘT 1 -->
+    <div class="footer-col">
+      <h4>Hotline</h4>
+      <p>Thứ 2 - Chủ Nhật (8:00 - 23:00)</p>
+      <p class="hotline">1900.6408</p>
+
+      <h4>Email</h4>
+      <p>support@ticketbox.vn</p>
+
+      <h4>Văn phòng chính</h4>
+      <p>Tầng 12, Tòa nhà Viettel, TP.HCM</p>
+
+      <div class="app">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg">
+        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg">
+      </div>
+    </div>
+
+    <!-- CỘT 2 -->
+    <div class="footer-col">
+      <h4>Dành cho Khách hàng</h4>
+      <p>Điều khoản sử dụng</p>
+
+      <h4>Dành cho Ban Tổ chức</h4>
+      <p>Điều khoản tổ chức</p>
+
+      <div class="app">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg">
+        <img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg">
+      </div>
+    </div>
+
+    <!-- CỘT 3 -->
+    <div class="footer-col">
+      <h4>Về công ty</h4>
+      <p>Chính sách bảo mật</p>
+      <p>Thanh toán</p>
+      <p>Giải quyết khiếu nại</p>
+
+      <h4>Follow us</h4>
+      <div class="social">
+        <span>📘</span>
+        <span>📸</span>
+        <span>🎵</span>
+        <span>💼</span>
+      </div>
+
+      <h4>Ngôn ngữ</h4>
+      <div class="lang">
+        🇻🇳 🇬🇧
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer-bottom">
+    <div class="footer-left">
+      <h2>ticketbox</h2>
+      <p>Nền tảng quản lý và phân phối vé sự kiện</p>
+    </div>
+
+    <div class="footer-right">
+      <p>Công ty TNHH Ticketbox</p>
+      <p>© 2026</p>
+    </div>
+  </div>
+</footer>
+<!-- CREATE EVENT MODAL -->
+<div id="createEventModal" class="modal">
+  <div class="modal-content">
+    <span onclick="closeCreateEvent()">×</span>
+    <h3>Tạo sự kiện</h3>
+
+    <input id="evTitle" placeholder="Tên sự kiện"><br>
+
+    <input id="evDesc" placeholder="Mô tả"><br>
+
+    <!-- CATEGORY -->
+    <select id="evCategory">
+      <option value="">Chọn loại</option>
+      <option>Âm nhạc</option>
+      <option>Hội thảo</option>
+      <option>Công nghệ</option>
+      <option>Startup</option>
+      <option>Thể thao</option>
+      <option>Vé bán lại</option>
+      <option>Khác</option>
+    </select><br>
+
+    <!-- DATE -->
+    <input type="date" id="evDate"><br>
+
+    <!-- LOCATION -->
+    <select id="evLocation">
+      <option value="">Chọn địa điểm</option>
+      <option>Hà Nội</option>
+      <option>TP.HCM</option>
+      <option>Đà Nẵng</option>
+    </select><br>
+
+    <input id="evPrice" placeholder="Giá vé"><br>
+
+    <button onclick="createEvent()">Tạo</button>
+  </div>
+</div>
+</body>
+</html>
