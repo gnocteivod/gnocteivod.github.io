@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập / Đăng ký - EventHub</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+        body{background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;color:#fff;overflow-x:hidden}
+        body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(243,59,38,.15) 0%,transparent 50%),radial-gradient(ellipse at 80% 50%,rgba(251,215,25,.1) 0%,transparent 50%);pointer-events:none}
+        .back-home{position:fixed;top:20px;left:20px;z-index:10}
+        .back-home a{color:#888;font-size:13px;text-decoration:none;display:flex;align-items:center;gap:6px;transition:.2s}
+        .back-home a:hover{color:#fff}
+        .card{background:#111;padding:2.5rem;border-radius:20px;box-shadow:0 25px 60px rgba(0,0,0,.8);width:100%;max-width:420px;border:1px solid #222;position:relative;z-index:1;margin:24px 16px}
+        .brand{font-size:26px;font-weight:900;color:#F33B26;letter-spacing:-1px;margin-bottom:6px;text-align:center}
+        h2{font-size:22px;font-weight:700;text-align:center;margin-bottom:4px;color:#fff}
+        .subtitle{text-align:center;color:#666;font-size:13px;margin-bottom:20px}
+        .tabs{display:flex;background:#1a1a1a;border-radius:12px;padding:4px;margin-bottom:24px;gap:4px}
+        .tab-btn{flex:1;padding:10px;border:none;border-radius:9px;font-weight:700;font-size:13px;cursor:pointer;background:transparent;color:#666;transition:.2s}
+        .tab-btn.active{background:#F33B26;color:#fff;box-shadow:0 4px 12px rgba(243,59,38,.3)}
+        .form-group{margin-bottom:14px}
+        label{display:block;font-size:11px;color:#888;margin-bottom:5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+        input{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid #2a2a2a;background:#1a1a1a;color:#fff;outline:none;transition:.2s;font-size:14px}
+        input:focus{border-color:#F33B26;background:#1f1f1f}
+        input::placeholder{color:#444}
+        .btn-main{width:100%;padding:14px;border:none;border-radius:12px;cursor:pointer;font-size:14px;font-weight:800;margin-top:6px;transition:.3s;background:linear-gradient(135deg,#F33B26,#ff6b35);color:#fff;text-transform:uppercase;letter-spacing:.5px}
+        .btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(243,59,38,.4)}
+        .divider{display:flex;align-items:center;text-align:center;margin:20px 0;color:#444;font-size:11px;font-weight:700;text-transform:uppercase;gap:12px}
+        .divider::before,.divider::after{content:'';flex:1;border-bottom:1px solid #252525}
+        .social-group{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+        .btn-social{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:12px;border-radius:12px;border:1.5px solid #252525;background:#161616;color:#fff;cursor:pointer;font-size:11px;font-weight:700;transition:.3s;text-decoration:none}
+        .btn-social:hover{border-color:#F33B26;background:#1f1010;transform:translateY(-2px)}
+        .btn-social img{width:24px;height:24px;object-fit:contain}
+        .btn-social .icon-emoji{font-size:22px;line-height:1}
+        .toggle-link{text-align:center;margin-top:18px;font-size:13px;color:#555}
+        .toggle-link span{color:#F33B26;cursor:pointer;font-weight:700}
+        .toggle-link span:hover{text-decoration:underline}
+        .error-box{background:#2a0000;border:1px solid #ff4d4d;color:#ff6b6b;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none;text-align:left}
+        .success-box{background:#002a0e;border:1px solid #4dff6b;color:#5aff78;border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:12px;display:none;text-align:left}
+        .forgot{text-align:right;font-size:12px;margin-bottom:14px;margin-top:-8px}
+        .forgot a{color:#888;text-decoration:none;font-weight:600}
+        .forgot a:hover{color:#F33B26}
+        .input-wrap{position:relative;margin-bottom:14px}
+        .input-wrap input{margin-bottom:0;padding-right:44px}
+        .input-wrap label{margin-bottom:5px}
+        .toggle-pass{position:absolute;right:12px;bottom:12px;cursor:pointer;color:#555;user-select:none;font-size:14px;transition:color .2s}
+        .toggle-pass:hover{color:#F33B26}
+        .spinner{display:none;width:20px;height:20px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto}
+        @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+</head>
+<body>
+<div class="back-home"><a href="index.html">← Về trang chủ</a></div>
+
+<div class="card">
+    <a href="index.html" style="text-decoration:none"><div class="brand">EventHub</div></a>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="tab-login" onclick="setMode('login')">Đăng nhập</button>
+        <button class="tab-btn" id="tab-register" onclick="setMode('register')">Đăng ký</button>
+    </div>
+
+    <!-- ĐĂNG NHẬP -->
+    <div id="login-form">
+        <div id="login-error" class="error-box"></div>
+        <div class="form-group">
+            <label>Email hoặc Số điện thoại</label>
+            <input type="text" id="login-user" placeholder="Email hoặc SĐT..." onkeydown="if(event.key==='Enter')handleLogin()">
+        </div>
+        <div class="input-wrap">
+            <label>Mật khẩu</label>
+            <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')handleLogin()">
+            <span class="toggle-pass" onclick="togglePass('login-pass',this)">👁</span>
+        </div>
+        <div class="forgot"><a href="#">Quên mật khẩu?</a></div>
+        <button class="btn-main" onclick="handleLogin()"><span id="btn-login-text">Đăng nhập</span><div class="spinner" id="login-spinner"></div></button>
+        <div class="divider">Hoặc tiếp tục với</div>
+        <div class="social-group">
+            <button class="btn-social" onclick="loginSocial('google')"><img src="https://www.google.com/favicon.ico" alt="Google"><span>Google</span></button>
+            <button class="btn-social" onclick="loginSocial('facebook')"><div class="icon-emoji">🔵</div><span>Facebook</span></button>
+            <button class="btn-social" onclick="loginSocial('github')"><i class="fa-brands fa-github" style="font-size:24px"></i><span>GitHub</span></button>
+        </div>
+        <div class="toggle-link">Chưa có tài khoản? <span onclick="setMode('register')">Đăng ký ngay</span></div>
+    </div>
+
+    <!-- ĐĂNG KÝ -->
+    <div id="register-form" style="display:none">
+        <div id="register-error" class="error-box"></div>
+        <div id="register-success" class="success-box"></div>
+        <div class="form-group">
+            <label>Họ và Tên *</label>
+            <input type="text" id="reg-name" placeholder="Nhập họ tên của bạn...">
+        </div>
+        <div class="form-group">
+            <label>Số điện thoại *</label>
+            <input type="tel" id="reg-phone" placeholder="09xx xxx xxx">
+        </div>
+        <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="reg-email" placeholder="example@gmail.com">
+        </div>
+        <div class="input-wrap">
+            <label>Mật khẩu *</label>
+            <input type="password" id="reg-pass" placeholder="Tối thiểu 6 ký tự">
+            <span class="toggle-pass" onclick="togglePass('reg-pass',this)">👁</span>
+        </div>
+        <div class="input-wrap">
+            <label>Xác nhận mật khẩu *</label>
+            <input type="password" id="reg-repass" placeholder="Nhập lại mật khẩu">
+            <span class="toggle-pass" onclick="togglePass('reg-repass',this)">👁</span>
+        </div>
+        <button class="btn-main" onclick="handleRegister()"><span id="btn-reg-text">Tạo tài khoản</span><div class="spinner" id="reg-spinner"></div></button>
+        <div class="divider">Hoặc đăng ký với</div>
+        <div class="social-group">
+            <button class="btn-social" onclick="loginSocial('google')"><img src="https://www.google.com/favicon.ico" alt="Google"><span>Google</span></button>
+            <button class="btn-social" onclick="loginSocial('facebook')"><div class="icon-emoji">🔵</div><span>Facebook</span></button>
+            <button class="btn-social" onclick="loginSocial('github')"><i class="fa-brands fa-github" style="font-size:24px"></i><span>GitHub</span></button>
+        </div>
+        <div class="toggle-link">Đã có tài khoản? <span onclick="setMode('login')">Đăng nhập</span></div>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, GithubAuthProvider, FacebookAuthProvider, signInWithPopup, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { firebaseConfig } from './firebase-config.js';
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+const urlParams = new URLSearchParams(window.location.search);
+const redirectTarget = urlParams.get('redirect') || 'index.html';
+const initMode = urlParams.get('mode') || 'login';
+
+window.setMode = (mode) => {
+    const lf = document.getElementById('login-form');
+    const rf = document.getElementById('register-form');
+    const tl = document.getElementById('tab-login');
+    const tr = document.getElementById('tab-register');
+    if (mode === 'login') {
+        lf.style.display = 'block'; rf.style.display = 'none';
+        tl.classList.add('active'); tr.classList.remove('active');
+    } else {
+        lf.style.display = 'none'; rf.style.display = 'block';
+        tl.classList.remove('active'); tr.classList.add('active');
+    }
+    clearErrors();
+};
+
+setMode(initMode);
+
+window.togglePass = (id, icon) => {
+    const inp = document.getElementById(id);
+    inp.type = inp.type === 'password' ? 'text' : 'password';
+    icon.textContent = inp.type === 'password' ? '👁' : '🙈';
+};
+
+function showError(id, msg) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = '⚠ ' + msg; el.style.display = 'block'; }
+}
+function clearErrors() {
+    ['login-error','register-error','register-success'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
+}
+
+function setLoading(type, loading) {
+    const btn = document.getElementById('btn-' + type + '-text');
+    const spin = document.getElementById(type + '-spinner');
+    if (btn) btn.style.display = loading ? 'none' : 'inline';
+    if (spin) spin.style.display = loading ? 'block' : 'none';
+}
+
+async function saveUserToStorage(uid, name, phone, email, photoURL) {
+    const userObj = { name: name || 'User', email: email || '', phone: phone || '', uid, avatar: photoURL || '', role: 'user' };
+    const s = JSON.stringify(userObj);
+    localStorage.setItem('currentUser', s);
+    localStorage.setItem('userLogin', s);
+    localStorage.setItem('isLoggedIn', 'true');
+    if (!localStorage.getItem('userBalance')) localStorage.setItem('userBalance', '0');
+    try {
+        await set(ref(db, 'users/' + uid), { ...userObj, time: new Date().toLocaleString('vi-VN') });
+    } catch(e) { console.warn('Firebase write failed:', e.code); }
+}
+
+window.handleLogin = async () => {
+    clearErrors();
+    const u = document.getElementById('login-user').value.trim();
+    const p = document.getElementById('login-pass').value;
+    if (!u || !p) return showError('login-error', 'Vui lòng nhập đầy đủ thông tin!');
+    // Admin test
+    if (u === 'admin' && p === 'admin123') {
+        localStorage.setItem('currentUser', JSON.stringify({ name: 'Admin', email: 'admin@eventhub.vn', phone: '', role: 'admin' }));
+        localStorage.setItem('isLoggedIn', 'true');
+        return window.location.href = 'admin.html';
+    }
+    // Local user check
+    const storedEmail = localStorage.getItem('storedEmail') || '';
+    const storedPhone = localStorage.getItem('storedPhone') || '';
+    const storedPass = localStorage.getItem('storedPass') || '';
+    const storedName = localStorage.getItem('storedName') || 'Người dùng';
+    if ((u === storedEmail || u === storedPhone) && p === storedPass) {
+        localStorage.setItem('currentUser', JSON.stringify({ name: storedName, email: storedEmail, phone: storedPhone, role: 'user' }));
+        localStorage.setItem('isLoggedIn', 'true');
+        return window.location.href = redirectTarget;
+    }
+    // Firebase login
+    if (!u.includes('@')) {
+        if (!storedEmail && !storedPhone) return showError('login-error', 'Email/SĐT hoặc mật khẩu không đúng!');
+        return showError('login-error', 'Email/SĐT hoặc mật khẩu không đúng!');
+    }
+    setLoading('login', true);
+    try {
+        const result = await signInWithEmailAndPassword(auth, u, p);
+        const user = result.user;
+        await saveUserToStorage(user.uid, user.displayName || u.split('@')[0], '', user.email, user.photoURL);
+        window.location.href = redirectTarget;
+    } catch (e) {
+        setLoading('login', false);
+        if (e.code === 'auth/user-not-found' || e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential')
+            showError('login-error', 'Email hoặc mật khẩu không đúng!');
+        else if (e.code === 'auth/too-many-requests')
+            showError('login-error', 'Quá nhiều lần thử. Vui lòng thử lại sau!');
+        else showError('login-error', 'Lỗi đăng nhập: ' + e.code);
+    }
+};
+
+window.handleRegister = async () => {
+    clearErrors();
+    const name = document.getElementById('reg-name').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const pass = document.getElementById('reg-pass').value;
+    const repass = document.getElementById('reg-repass').value;
+    if (!name || !phone || !email || !pass) return showError('register-error', 'Vui lòng điền đầy đủ thông tin!');
+    if (!email.includes('@')) return showError('register-error', 'Email không hợp lệ!');
+    if (pass.length < 6) return showError('register-error', 'Mật khẩu phải có ít nhất 6 ký tự!');
+    if (pass !== repass) return showError('register-error', 'Mật khẩu xác nhận không khớp!');
+    setLoading('reg', true);
+    try {
+        const result = await createUserWithEmailAndPassword(auth, email, pass);
+        await updateProfile(result.user, { displayName: name });
+        await saveUserToStorage(result.user.uid, name, phone, email, null);
+        // Also store locally for phone login
+        localStorage.setItem('storedName', name);
+        localStorage.setItem('storedEmail', email);
+        localStorage.setItem('storedPhone', phone);
+        localStorage.setItem('storedPass', pass);
+        const s = document.getElementById('register-success');
+        if (s) { s.textContent = '✅ Đăng ký thành công! Đang chuyển hướng...'; s.style.display = 'block'; }
+        setTimeout(() => window.location.href = redirectTarget, 1500);
+    } catch (e) {
+        setLoading('reg', false);
+        if (e.code === 'auth/email-already-in-use') showError('register-error', 'Email này đã được đăng ký!');
+        else showError('register-error', 'Lỗi đăng ký: ' + e.code);
+    }
+};
+
+window.loginSocial = async (provider) => {
+    let prov;
+    if (provider === 'google') prov = new GoogleAuthProvider();
+    else if (provider === 'github') prov = new GithubAuthProvider();
+    else if (provider === 'facebook') prov = new FacebookAuthProvider();
+    else return;
+    try {
+        const result = await signInWithPopup(auth, prov);
+        const user = result.user;
+        const isNew = result._tokenResponse?.isNewUser;
+        await saveUserToStorage(user.uid, user.displayName, '', user.email, user.photoURL);
+        window.location.href = redirectTarget;
+    } catch (e) {
+        if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') return;
+        if (e.code === 'auth/popup-blocked') {
+            showError('login-error', 'Popup bị chặn! Vui lòng cho phép popup trong trình duyệt.');
+            return;
+        }
+        showError('login-error', 'Lỗi đăng nhập mạng xã hội: ' + (e.code || e.message));
+    }
+};
+</script>
+</body>
+</html>
