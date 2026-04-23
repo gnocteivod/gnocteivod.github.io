@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="vi" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventHub - Nền tảng sự kiện hàng đầu Việt Nam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        html.dark body{background:linear-gradient(135deg,#1a0a10,#0f0f1a,#051a18)!important;color:#e5e7eb!important}
+        html.dark header{background-color:rgba(10,10,15,.95)!important;border-color:rgba(255,255,255,.08)!important}
+        html.dark #search-suggestions{background:rgba(20,20,30,.98)!important;border-color:rgba(255,255,255,.1)!important}
+        html.dark .text-gray-900{color:#f3f4f6!important}html.dark .text-gray-800{color:#e5e7eb!important}html.dark .text-gray-600{color:#9ca3af!important}
+        html.dark .bg-white{background-color:#1e1e2e!important}html.dark .bg-slate-50{background-color:#0f0f1a!important}
+        html.dark .event-card{background:#1e1e2e!important;border-color:rgba(255,255,255,.08)!important}
+        html.dark .modal-box{background:#1e1e2e!important;color:#e5e7eb!important}
+        body{background:linear-gradient(135deg,#fdf2f8,#eff6ff,#f0fdf4);min-height:100vh}
+        .no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+        .blob-shape{border-radius:42% 58% 70% 30%/45% 45% 55% 55%;background:linear-gradient(135deg,#FFDEE9,#B5FFFC)}
+        .glass-card{background:rgba(255,255,255,.7);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.8)}
+        .cat-nav{background:#1a1a1a}
+        .cat-nav a{color:#999;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:0 14px;white-space:nowrap;transition:color .2s;text-decoration:none}
+        .cat-nav a:hover,.cat-nav a.active{color:#fff}
+        .event-card{background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid #f3f4f6;transition:all .3s;text-decoration:none;display:block}
+        .event-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.12);transform:translateY(-2px)}
+        .seat{width:22px;height:22px;border-radius:5px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:8px;font-weight:900;transition:all .15s;margin:2px;border:1.5px solid transparent}
+        .seat.vip{background:#fef9c3;border-color:#f59e0b;color:#92400e}
+        .seat.regular{background:#dcfce7;border-color:#22c55e;color:#166534}
+        .seat.sold{background:#e5e7eb;border-color:#d1d5db;color:#9ca3af;cursor:not-allowed}
+        .seat.selected{background:linear-gradient(135deg,#00f2fe,#fb00ff);border-color:transparent;color:white;transform:scale(1.15)}
+        .seat:not(.sold):hover{transform:scale(1.1)}
+        .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:1000;overflow-y:auto}
+        .modal-box{background:white;border-radius:24px;width:90%;max-width:940px;margin:24px auto;overflow:hidden}
+        #pay-modal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1100;overflow-y:auto;display:none}
+        #pay-modal.show{display:block}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .animate-fadeIn{animation:fadeIn .3s ease}
+    </style>
+</head>
+<body class="bg-slate-50">
+
+<header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-lg border-b border-gray-100 shadow-sm">
+    <div class="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between gap-6 relative">
+        <div class="flex items-center space-x-8 flex-shrink-0">
+            <a href="index.html"><h1 class="text-3xl font-black text-[#F33B26] tracking-tighter">EventHub</h1></a>
+            <nav class="hidden xl:flex space-x-5 font-bold text-gray-600 text-sm">
+                <a href="index.html" class="text-pink-500">Trang chủ</a>
+                <a href="detail.html" class="hover:text-blue-400 transition">Sự kiện</a>
+                <a href="calendar.html" class="hover:text-blue-400 transition">Lịch</a>
+                <a href="blog.html" class="hover:text-blue-400 transition">Blog</a>
+                <a href="contact.html" class="hover:text-blue-400 transition">Liên hệ</a>
+            </nav>
+        </div>
+        <div class="flex-1 max-w-xl relative" id="search-container">
+            <div class="flex items-center bg-white border-2 border-gray-200 rounded-full shadow-sm overflow-hidden hover:border-pink-300 transition-all">
+                <div class="flex items-center flex-1 px-4 py-2.5">
+                    <i class="fa-solid fa-magnifying-glass text-gray-400 mr-3 text-sm"></i>
+                    <input type="text" id="search-input" autocomplete="off" placeholder="Tìm sự kiện, nghệ sĩ..." class="w-full outline-none bg-transparent font-medium text-sm text-gray-700 placeholder-gray-400">
+                </div>
+                <button onclick="doSearch()" class="bg-[#F33B26] text-white px-5 py-2.5 font-bold text-sm hover:bg-red-600 transition flex-shrink-0">Tìm</button>
+            </div>
+            <div id="search-suggestions" class="absolute top-[110%] left-0 w-full bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 hidden z-[500]">
+                <div id="live-results" class="hidden"></div>
+                <div id="trending-block">
+                    <p class="text-[10px] font-black text-gray-400 uppercase mb-3 tracking-widest">Phổ biến 🔥</p>
+                    <div class="flex flex-wrap gap-2 mb-4" id="tag-list">
+                        <span class="suggestion-tag px-3 py-1.5 bg-gray-50 rounded-full text-xs font-bold text-gray-600 hover:bg-pink-50 hover:text-pink-500 cursor-pointer transition">#anh-trai-say-hi</span>
+                        <span class="suggestion-tag px-3 py-1.5 bg-gray-50 rounded-full text-xs font-bold text-gray-600 hover:bg-blue-50 hover:text-blue-500 cursor-pointer transition">#bts-concert</span>
+                        <span class="suggestion-tag px-3 py-1.5 bg-gray-50 rounded-full text-xs font-bold text-gray-600 hover:bg-yellow-50 hover:text-yellow-600 cursor-pointer transition">#workshop</span>
+                    </div>
+                    <div class="border-t border-gray-100 pt-3 flex space-x-6 mb-3">
+                        <button id="tab-genre" onclick="switchSearchTab('genre')" class="pb-1 text-sm font-black border-b-2 border-gray-800 text-gray-800 transition">THỂ LOẠI</button>
+                        <button id="tab-city" onclick="switchSearchTab('city')" class="pb-1 text-sm font-black border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition">THÀNH PHỐ</button>
+                    </div>
+                    <div id="panel-genre" class="grid grid-cols-4 gap-2">
+                        <div onclick="searchBy('Âm nhạc')" class="group cursor-pointer"><div class="aspect-video bg-pink-100 rounded-xl overflow-hidden relative"><img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=200" class="w-full h-full object-cover group-hover:scale-110 transition duration-500"><div class="absolute inset-0 bg-black/30 flex items-center justify-center text-white font-black text-[9px] uppercase">Âm nhạc</div></div></div>
+                        <div onclick="searchBy('Sân khấu')" class="group cursor-pointer"><div class="aspect-video bg-blue-100 rounded-xl overflow-hidden relative"><img src="https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=200" class="w-full h-full object-cover group-hover:scale-110 transition duration-500"><div class="absolute inset-0 bg-black/30 flex items-center justify-center text-white font-black text-[9px] uppercase">Sân khấu</div></div></div>
+                        <div onclick="searchBy('Workshop')" class="group cursor-pointer"><div class="aspect-video bg-yellow-100 rounded-xl overflow-hidden relative"><img src="https://images.unsplash.com/photo-1459749411177-042180ce673c?w=200" class="w-full h-full object-cover group-hover:scale-110 transition duration-500"><div class="absolute inset-0 bg-black/30 flex items-center justify-center text-white font-black text-[9px] uppercase">Workshop</div></div></div>
+                        <div onclick="searchBy('Thể thao')" class="group cursor-pointer"><div class="aspect-video bg-green-100 rounded-xl overflow-hidden relative"><img src="https://images.unsplash.com/photo-1471295253337-3ceaaedca402?w=200" class="w-full h-full object-cover group-hover:scale-110 transition duration-500"><div class="absolute inset-0 bg-black/30 flex items-center justify-center text-white font-black text-[9px] uppercase">Thể thao</div></div></div>
+                    </div>
+                    <div id="panel-city" class="hidden grid grid-cols-4 gap-3">
+                        <div class="cursor-pointer text-center" onclick="searchBy('Hà Nội')"><div class="w-14 h-14 mx-auto bg-pink-100 rounded-full mb-1 flex items-center justify-center text-2xl">🏛️</div><span class="text-[11px] font-bold text-gray-600">Hà Nội</span></div>
+                        <div class="cursor-pointer text-center" onclick="searchBy('TP. HCM')"><div class="w-14 h-14 mx-auto bg-blue-100 rounded-full mb-1 flex items-center justify-center text-2xl">🌆</div><span class="text-[11px] font-bold text-gray-600">TP. Hồ Chí Minh</span></div>
+                        <div class="cursor-pointer text-center" onclick="searchBy('Đà Nẵng')"><div class="w-14 h-14 mx-auto bg-yellow-100 rounded-full mb-1 flex items-center justify-center text-2xl">🏖️</div><span class="text-[11px] font-bold text-gray-600">Đà Nẵng</span></div>
+                        <div class="cursor-pointer text-center" onclick="searchBy('Đà Lạt')"><div class="w-14 h-14 mx-auto bg-purple-100 rounded-full mb-1 flex items-center justify-center text-2xl">🌸</div><span class="text-[11px] font-bold text-gray-600">Đà Lạt</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="flex items-center gap-3 flex-shrink-0">
+            <button id="theme-toggle" onclick="toggleTheme()" class="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition" title="Đổi chủ đề">
+                <i id="theme-icon" class="fa-solid fa-moon text-gray-500 text-sm"></i>
+            </button>
+            <div id="guest-nav" class="flex items-center bg-gray-100/80 rounded-full p-1 border border-gray-200">
+                <a href="auth.html?mode=login" class="bg-white text-gray-700 px-4 py-1.5 rounded-full shadow-sm text-xs font-bold hover:text-pink-500 transition">Đăng nhập</a>
+                <a href="auth.html?mode=register" class="text-gray-500 px-3 py-1.5 text-xs font-bold hover:text-blue-500 transition">Đăng ký</a>
+            </div>
+            <div id="user-nav" class="hidden relative">
+                <div onclick="toggleHeaderMenu()" class="flex items-center gap-2 bg-white/50 border border-pink-100 rounded-full p-1 pr-3 cursor-pointer shadow-sm hover:shadow transition">
+                    <div id="header-avatar-initial" class="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 to-violet-500 flex items-center justify-center text-white font-black text-sm">U</div>
+                    <span id="header-username" class="text-xs font-bold text-pink-600 max-w-[80px] truncate">User</span>
+                    <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                </div>
+                <div id="header-user-menu" class="hidden absolute right-0 top-[110%] w-52 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white p-2 z-50 animate-fadeIn">
+                    <div class="px-3 py-2 border-b border-gray-100 mb-1">
+                        <p id="menu-name" class="text-sm font-black text-gray-800">Người dùng</p>
+                        <p id="menu-email" class="text-[10px] text-gray-400 truncate"></p>
+                        <p class="text-[10px] font-bold text-pink-500 mt-0.5">Số dư: <span id="menu-balance">0đ</span></p>
+                    </div>
+                    <a href="dashboard.html" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-gray-600 hover:bg-pink-50 hover:text-pink-500 rounded-xl transition"><i class="fa-solid fa-user-gear w-4"></i> Tài khoản</a>
+                    <a href="dashboard.html" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-gray-600 hover:bg-pink-50 hover:text-pink-500 rounded-xl transition"><i class="fa-solid fa-ticket-simple w-4 text-pink-400"></i> Vé của tôi</a>
+                    <button onclick="handleLogout()" class="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-black text-red-500 hover:bg-red-50 rounded-xl transition"><i class="fa-solid fa-power-off w-4"></i> Đăng xuất</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="cat-nav">
+        <div class="max-w-[1400px] mx-auto px-4 flex items-center overflow-x-auto no-scrollbar h-10 gap-1">
+            <a href="#" class="active">Tất cả</a><a href="#">Âm nhạc</a><a href="#">Concert</a><a href="#">Sân khấu</a><a href="#">Workshop</a><a href="#">Thể thao</a><a href="#">Triển lãm</a><a href="#">Miễn phí</a>
+            <a href="create.html" class="ml-auto" style="color:#F33B26">+ Tạo sự kiện</a>
+        </div>
+    </div>
+</header>
+
+<main class="max-w-[1400px] mx-auto px-4 py-10">
+    <!-- HERO -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 min-h-[65vh] items-center mb-20">
+        <div class="space-y-8">
+            <div class="inline-flex items-center gap-2 bg-pink-50 text-pink-600 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-pink-100">
+                <span class="w-2 h-2 bg-pink-500 rounded-full animate-pulse"></span> Hot Event 2026
+            </div>
+            <h2 class="text-6xl xl:text-7xl font-black text-gray-900 leading-[0.9]">CONCERT<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-blue-400">CỰC HOTT</span></h2>
+            <p class="text-xl font-bold text-gray-500 uppercase tracking-tighter">18.04.2026 | VẠN PHÚC CITY, HÀ ĐÔNG</p>
+            <div class="flex gap-4 flex-wrap">
+                <button onclick="openTicketModal('Concert Cực Hott 2026')" class="bg-[#FBD719] text-black px-8 py-4 rounded-xl font-black text-lg shadow-lg hover:scale-105 transition active:scale-95">🎫 Đặt vé ngay</button>
+                <a href="detail.html?id=21" class="border-2 border-gray-800 text-gray-800 px-8 py-4 rounded-xl font-black text-lg hover:bg-gray-800 hover:text-white transition inline-block">Xem thêm →</a>
+            </div>
+            <div class="flex items-center gap-6 pt-2">
+                <div class="flex -space-x-2">
+                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=A1" class="w-9 h-9 rounded-full border-2 border-white">
+                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=B2" class="w-9 h-9 rounded-full border-2 border-white">
+                    <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=C3" class="w-9 h-9 rounded-full border-2 border-white">
+                </div>
+                <p class="text-sm font-bold text-gray-400">+2.847 người đã đặt vé</p>
+            </div>
+        </div>
+        <div class="flex flex-col items-center gap-6">
+            <div class="w-72 h-72 blob-shape border-8 border-white shadow-2xl overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600" class="w-full h-full object-cover">
+            </div>
+            <div class="flex gap-4 justify-center">
+                <div class="glass-card px-5 py-3 rounded-2xl text-center"><p class="text-2xl font-black text-pink-500">50+</p><p class="text-[10px] text-gray-400 font-bold uppercase">Sự kiện</p></div>
+                <div class="glass-card px-5 py-3 rounded-2xl text-center"><p class="text-2xl font-black text-blue-500">10K+</p><p class="text-[10px] text-gray-400 font-bold uppercase">Người dùng</p></div>
+                <div class="glass-card px-5 py-3 rounded-2xl text-center"><p class="text-2xl font-black text-green-500">4.9⭐</p><p class="text-[10px] text-gray-400 font-bold uppercase">Đánh giá</p></div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="border-gray-200 my-12">
+
+    <!-- SỰ KIỆN ĐẶC BIỆT -->
+    <section class="space-y-8 mb-16">
+        <h3 class="text-3xl font-black text-gray-800">SỰ KIỆN ĐẶC BIỆT ✨</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <a href="detail.html?id=21" class="group relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white aspect-video bg-gray-200 block">
+                <img src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=800" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                <div class="absolute bottom-6 left-6 text-white"><div class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">18.04.2026 · Vạn Phúc City</div><h4 class="text-2xl font-black uppercase">Concert Cực Hott</h4></div>
+                <div class="absolute bottom-6 right-6"><span class="bg-white/90 px-5 py-2 rounded-lg font-bold text-sm shadow">Xem chi tiết</span></div>
+            </a>
+            <a href="detail.html?id=26" class="group relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white aspect-video bg-gray-200 block">
+                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+                <div class="absolute bottom-6 left-6 text-white"><div class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">18.05.2026 · SVĐ Mỹ Đình</div><h4 class="text-2xl font-black uppercase">BTS World Tour Arirang</h4></div>
+                <div class="absolute bottom-6 right-6"><span class="bg-white/90 px-5 py-2 rounded-lg font-bold text-sm shadow">Xem chi tiết</span></div>
+            </a>
+        </div>
+    </section>
+
+    <!-- SỰ KIỆN SẮP DIỄN RA -->
+    <section class="space-y-6 mb-16">
+        <div class="flex items-center justify-between">
+            <div><h3 class="text-3xl font-black text-gray-800">SỰ KIỆN SẮP DIỄN RA</h3><p class="text-sm text-gray-400 font-medium mt-1">Đừng bỏ lỡ những sự kiện hot nhất</p></div>
+            <a href="detail.html" class="text-sm font-bold text-pink-500 flex items-center gap-1">Xem tất cả <i class="fa-solid fa-arrow-right text-xs"></i></a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            <a href="detail.html?id=21" class="event-card group">
+                <div class="relative aspect-video overflow-hidden"><img src="https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=400" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"><div class="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded-lg text-[10px] font-black text-pink-500 uppercase">Âm nhạc</div></div>
+                <div class="p-4 space-y-2"><p class="font-black text-gray-800 text-sm line-clamp-2 group-hover:text-pink-500 transition">Concert Cực Hott - Đêm Nhạc Đặc Biệt</p><div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium"><i class="fa-regular fa-calendar text-pink-400"></i> 18.04.2026</div><div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium"><i class="fa-solid fa-location-dot text-blue-400"></i> Vạn Phúc City, Hà Đông</div><div class="flex items-center justify-between pt-1"><span class="text-sm font-black text-[#F33B26]">Từ 1.000.000đ</span><span class="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold">Còn vé</span></div></div>
+            </a>
+            <a href="detail.html?id=26" class="event-card group">
+                <div class="relative aspect-video overflow-hidden"><img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"><div class="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded-lg text-[10px] font-black text-red-500 uppercase">Concert</div><div class="absolute top-3 right-3 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black">HOT</div></div>
+                <div class="p-4 space-y-2"><p class="font-black text-gray-800 text-sm line-clamp-2 group-hover:text-pink-500 transition">BTS World Tour Arirang</p><div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium"><i class="fa-regular fa-calendar text-pink-400"></i> 18.05.2026</div><div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium"><i class="fa-solid fa-location-dot text-blue-400"></i> SVĐ Quốc gia Mỹ Đình</div><div class="flex items-center justify-between pt-1"><span class="text-sm font-black text-[#F33B26]">Từ 300.000đ</span><span class="text-[10px] bg-yellow-100 text-yellow-600 px-2 py-0.5 rounded-full font-bold">Sắp hết</span></div></div>
+            </a>
+            <a href="detail.html" class="event-card group">
+                <div class="relative aspect-video overflow-hidden"><img src="https://images.unsplash.com/photo-1514525253361-bee8718a34a1?w=400" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"><div class="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded-lg text-[10px] font-black text-blue-500 uppercase">Workshop</div></div>
+                <div class="p-4 space-y-2"><p class="font-black text-gray-800 text-sm line-clamp-2 group-hover:text-pink-500 transition">Workshop Thiết Kế UI/UX Thực Chiến</p><div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium"><i class="fa-regular fa-calendar text-pink-400"></i> 20.04.2026</div><div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium"><i class="fa-solid fa-location-dot text-blue-400"></i> Cầu Giấy, Hà Nội</div><div class="flex items-center justify-between pt-1"><span class="text-sm font-black text-[#F33B26]">Từ 300.000đ</span><span class="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold">Còn vé</span></div></div>
+            </a>
+            <a href="detail.html" class="event-card group">
+                <div class="relative aspect-video overflow-hidden"><img src="https://images.unsplash.com/photo-1471295253337-3ceaaedca402?w=400" class="w-full h-full object-cover group-hover:scale-105 transition duration-500"><div class="absolute top-3 left-3 bg-white/90 px-2 py-1 rounded-lg text-[10px] font-black text-green-600 uppercase">Thể thao</div></div>
+                <div class="p-4 space-y-2"><p class="font-black text-gray-800 text-sm line-clamp-2 group-hover:text-pink-500 transition">MB Hanoi Cup 2026 - Giải Bóng Đá Phủi</p><div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium"><i class="fa-regular fa-calendar text-pink-400"></i> 01.05.2026</div><div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium"><i class="fa-solid fa-location-dot text-blue-400"></i> Sân Mỹ Đình, Hà Nội</div><div class="flex items-center justify-between pt-1"><span class="text-sm font-black text-green-500">Miễn phí</span><span class="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold">Còn vé</span></div></div>
+            </a>
+        </div>
+    </section>
+
+    <!-- THỂ LOẠI -->
+    <section class="space-y-6 mb-16">
+        <h3 class="text-3xl font-black text-gray-800">KHÁM PHÁ THEO THỂ LOẠI</h3>
+        <div class="grid grid-cols-3 md:grid-cols-6 gap-4">
+            <a href="detail.html" class="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"><div class="w-14 h-14 rounded-2xl bg-pink-100 flex items-center justify-center group-hover:bg-pink-400 transition-colors"><i class="fa-solid fa-music text-2xl text-pink-400 group-hover:text-white transition-colors"></i></div><span class="text-xs font-black text-gray-700">Âm nhạc</span></a>
+            <a href="detail.html" class="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"><div class="w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center group-hover:bg-purple-400 transition-colors"><i class="fa-solid fa-masks-theater text-2xl text-purple-400 group-hover:text-white transition-colors"></i></div><span class="text-xs font-black text-gray-700">Sân khấu</span></a>
+            <a href="detail.html" class="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"><div class="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center group-hover:bg-blue-400 transition-colors"><i class="fa-solid fa-chalkboard-user text-2xl text-blue-400 group-hover:text-white transition-colors"></i></div><span class="text-xs font-black text-gray-700">Workshop</span></a>
+            <a href="detail.html" class="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"><div class="w-14 h-14 rounded-2xl bg-green-100 flex items-center justify-center group-hover:bg-green-400 transition-colors"><i class="fa-solid fa-futbol text-2xl text-green-400 group-hover:text-white transition-colors"></i></div><span class="text-xs font-black text-gray-700">Thể thao</span></a>
+            <a href="detail.html" class="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"><div class="w-14 h-14 rounded-2xl bg-yellow-100 flex items-center justify-center group-hover:bg-yellow-400 transition-colors"><i class="fa-solid fa-person-hiking text-2xl text-yellow-500 group-hover:text-white transition-colors"></i></div><span class="text-xs font-black text-gray-700">Tham quan</span></a>
+            <a href="detail.html" class="group flex flex-col items-center gap-3 p-5 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300"><div class="w-14 h-14 rounded-2xl bg-orange-100 flex items-center justify-center group-hover:bg-orange-400 transition-colors"><i class="fa-solid fa-mug-hot text-2xl text-orange-400 group-hover:text-white transition-colors"></i></div><span class="text-xs font-black text-gray-700">Hội thảo</span></a>
+        </div>
+    </section>
+
+    <!-- MIỄN PHÍ -->
+    <section class="space-y-6 mb-16">
+        <div class="flex items-center justify-between">
+            <div><h3 class="text-3xl font-black text-gray-800">SỰ KIỆN MIỄN PHÍ 🎉</h3><p class="text-sm text-gray-400 font-medium mt-1">Tham gia hoàn toàn miễn phí, chỉ cần đăng ký</p></div>
+            <a href="detail.html" class="text-sm font-bold text-pink-500 flex items-center gap-1">Xem tất cả <i class="fa-solid fa-arrow-right text-xs"></i></a>
+        </div>
+        <div class="space-y-3">
+            <a href="detail.html" class="group flex items-center gap-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md hover:border-pink-200 transition-all"><div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0"><img src="https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=100" class="w-full h-full object-cover"></div><div class="flex-1 min-w-0"><p class="font-black text-gray-800 text-sm group-hover:text-pink-500 transition truncate">Lễ Hội Văn Hoá Dân Gian 2026</p><p class="text-xs text-gray-400 mt-0.5">📅 15.04.2026 · 📍 Văn Miếu, Hà Nội</p></div><span class="text-xs font-black text-green-500 bg-green-50 px-3 py-1 rounded-full flex-shrink-0">Miễn phí</span></a>
+            <a href="detail.html" class="group flex items-center gap-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md hover:border-pink-200 transition-all"><div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100" class="w-full h-full object-cover"></div><div class="flex-1 min-w-0"><p class="font-black text-gray-800 text-sm group-hover:text-pink-500 transition truncate">Tech Meetup Hà Nội - Tháng 4/2026</p><p class="text-xs text-gray-400 mt-0.5">📅 22.04.2026 · 📍 Cầu Giấy, Hà Nội</p></div><span class="text-xs font-black text-green-500 bg-green-50 px-3 py-1 rounded-full flex-shrink-0">Miễn phí</span></a>
+            <a href="detail.html" class="group flex items-center gap-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md hover:border-pink-200 transition-all"><div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0"><img src="https://images.unsplash.com/photo-1464207687429-7505649dae38?w=100" class="w-full h-full object-cover"></div><div class="flex-1 min-w-0"><p class="font-black text-gray-800 text-sm group-hover:text-pink-500 transition truncate">Triển Lãm Nghệ Thuật Đương Đại 2026</p><p class="text-xs text-gray-400 mt-0.5">📅 28.04.2026 · 📍 Bảo tàng Mỹ thuật, HN</p></div><span class="text-xs font-black text-green-500 bg-green-50 px-3 py-1 rounded-full flex-shrink-0">Miễn phí</span></a>
+        </div>
+    </section>
+
+    <!-- BANNER TẠO SỰ KIỆN -->
+    <section class="mb-16">
+        <div class="relative rounded-3xl overflow-hidden p-10 flex flex-col md:flex-row items-center justify-between shadow-xl gap-6" style="background:linear-gradient(135deg,#F33B26,#ff8c69)">
+            <div class="space-y-3 text-white">
+                <p class="text-xs font-black uppercase tracking-widest opacity-80">Bạn có sự kiện?</p>
+                <h3 class="text-4xl font-black leading-tight">TẠO SỰ KIỆN<br>CỦA BẠN</h3>
+                <p class="text-sm opacity-80 font-medium">Dễ dàng tạo và quản lý sự kiện ngay trên EventHub</p>
+                <a href="create.html" class="inline-flex items-center gap-2 bg-white text-[#F33B26] px-6 py-3 rounded-xl font-black text-sm hover:scale-105 transition shadow-lg mt-2"><i class="fa-solid fa-plus-circle"></i> Tạo ngay miễn phí</a>
+            </div>
+            <div class="hidden md:block text-white/20 text-[120px] font-black leading-none select-none">🎪</div>
+        </div>
+    </section>
+</main>
+
+<footer class="bg-[#1a1a1a] text-white">
+    <div class="border-b border-white/10 py-10">
+        <div class="max-w-[1400px] mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+            <div><h4 class="text-xl font-black">Đăng ký nhận tin 📬</h4><p class="text-gray-400 text-sm mt-1">Nhận thông báo sự kiện mới nhất</p></div>
+            <div class="flex gap-2 w-full md:w-auto">
+                <input type="email" id="newsletter-email" placeholder="Email của bạn..." class="flex-1 md:w-72 bg-white/10 border border-white/20 rounded-full px-5 py-2.5 text-sm outline-none focus:border-pink-400 transition placeholder-gray-500">
+                <button onclick="subscribeNewsletter()" class="bg-[#F33B26] text-white px-6 py-2.5 rounded-full font-black text-sm hover:bg-red-500 transition">Đăng ký</button>
+            </div>
+        </div>
+    </div>
+    <div class="max-w-[1400px] mx-auto px-4 py-12 grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div class="col-span-2 md:col-span-1 space-y-4">
+            <h2 class="text-2xl font-black text-[#F33B26]">EventHub</h2>
+            <p class="text-gray-400 text-sm leading-relaxed">Nền tảng mua bán vé sự kiện hàng đầu Việt Nam.</p>
+            <div class="flex gap-3">
+                <a href="#" class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-blue-600 transition"><i class="fa-brands fa-facebook-f text-sm"></i></a>
+                <a href="#" class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-pink-500 transition"><i class="fa-brands fa-instagram text-sm"></i></a>
+                <a href="#" class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-gray-700 transition"><i class="fa-brands fa-tiktok text-sm"></i></a>
+            </div>
+        </div>
+        <div class="space-y-3"><h5 class="font-black text-sm uppercase tracking-wider">Khám phá</h5><div class="space-y-2 text-sm text-gray-400"><a href="detail.html" class="block hover:text-white transition">Sự kiện</a><a href="calendar.html" class="block hover:text-white transition">Lịch sự kiện</a><a href="blog.html" class="block hover:text-white transition">Blog</a></div></div>
+        <div class="space-y-3"><h5 class="font-black text-sm uppercase tracking-wider">Tài khoản</h5><div class="space-y-2 text-sm text-gray-400"><a href="auth.html?mode=login" class="block hover:text-white transition">Đăng nhập</a><a href="auth.html?mode=register" class="block hover:text-white transition">Đăng ký</a><a href="dashboard.html" class="block hover:text-white transition">Dashboard</a></div></div>
+        <div class="space-y-3"><h5 class="font-black text-sm uppercase tracking-wider">Liên hệ</h5><div class="space-y-2 text-sm text-gray-400"><p class="flex items-center gap-2"><i class="fa-solid fa-envelope text-pink-400"></i> support@eventhub.vn</p><p class="flex items-center gap-2"><i class="fa-solid fa-phone text-pink-400"></i> 0123 456 789</p><p class="flex items-center gap-2"><i class="fa-solid fa-location-dot text-pink-400"></i> Hà Nội, Việt Nam</p></div></div>
+    </div>
+    <div class="border-t border-white/10 py-5 text-center text-gray-500 text-xs font-medium"><p>© 2026 EventHub - Trải nghiệm sự kiện tuyệt vời nhất</p></div>
+</footer>
+
+<!-- MODAL VÉ -->
+<div id="ticket-modal" class="modal-bg hidden">
+    <div class="modal-box animate-fadeIn my-8">
+        <div class="px-7 py-5 text-white flex items-center justify-between" style="background:linear-gradient(135deg,#F33B26,#ff6b35)">
+            <div><h2 class="text-xl font-black" id="modal-event-name">Chọn vé</h2><p style="color:rgba(255,255,255,.8);font-size:13px">Chọn suất diễn và vị trí ghế</p></div>
+            <button onclick="closeTicketModal()" style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:50%;border:none;cursor:pointer;color:white;font-size:18px">×</button>
+        </div>
+        <div class="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 space-y-5">
+                <div>
+                    <div class="font-black text-gray-800 mb-3 text-sm">🕐 Chọn suất diễn</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2" id="show-selector">
+                        <button onclick="selectShow(this,'18/04/2026','19:30','22:00','Vạn Phúc City, Hà Đông')" style="border:2px solid #F33B26;background:#fef2f2;border-radius:12px;padding:12px;text-align:left;cursor:pointer" class="show-btn"><div style="font-weight:900;color:#F33B26;font-size:12px">18/04/2026</div><div style="color:#6b7280;font-size:11px">19:30 – 22:00 · Thứ 6</div><div style="color:#16a34a;font-size:11px;font-weight:700;margin-top:4px">● Còn vé</div></button>
+                        <button onclick="selectShow(this,'19/04/2026','15:00','17:30','Vạn Phúc City, Hà Đông')" style="border:2px solid #e5e7eb;background:#f9fafb;border-radius:12px;padding:12px;text-align:left;cursor:pointer" class="show-btn"><div style="font-weight:900;color:#374151;font-size:12px">19/04/2026</div><div style="color:#6b7280;font-size:11px">15:00 – 17:30 · Thứ 7</div><div style="color:#ea580c;font-size:11px;font-weight:700;margin-top:4px">⚠ Sắp hết</div></button>
+                        <button onclick="selectShow(this,'26/04/2026','19:30','22:00','Cung TT Quần Ngựa, HN')" style="border:2px solid #e5e7eb;background:#f9fafb;border-radius:12px;padding:12px;text-align:left;cursor:pointer" class="show-btn"><div style="font-weight:900;color:#374151;font-size:12px">26/04/2026</div><div style="color:#6b7280;font-size:11px">19:30 – 22:00 · Thứ 7</div><div style="color:#16a34a;font-size:11px;font-weight:700;margin-top:4px">● Còn vé</div></button>
+                    </div>
+                </div>
+                <div>
+                    <div class="font-black text-gray-800 mb-2 text-sm">🗺️ Sơ đồ chỗ ngồi <span class="text-gray-400 font-normal text-xs">(Tối đa 4 ghế)</span></div>
+                    <div class="flex flex-wrap gap-4 mb-3 text-xs font-bold">
+                        <span class="flex items-center gap-1.5"><span class="w-4 h-4 bg-yellow-100 border border-yellow-400 rounded inline-block"></span>VIP 850k</span>
+                        <span class="flex items-center gap-1.5"><span class="w-4 h-4 bg-green-100 border border-green-400 rounded inline-block"></span>Thường 450k</span>
+                        <span class="flex items-center gap-1.5"><span style="width:16px;height:16px;background:linear-gradient(135deg,#00f2fe,#fb00ff);border-radius:4px;display:inline-block"></span>Đang chọn</span>
+                        <span class="flex items-center gap-1.5"><span class="w-4 h-4 bg-gray-200 border border-gray-300 rounded inline-block"></span>Đã bán</span>
+                    </div>
+                    <div style="text-align:center;padding:10px;border-radius:12px;color:white;font-weight:900;font-size:13px;letter-spacing:2px;margin-bottom:16px;background:linear-gradient(90deg,#F33B26,#ff6b35)">🎤 SÂN KHẤU</div>
+                    <div style="overflow-x:auto"><div id="seat-map" style="min-width:max-content;margin:0 auto;text-align:center;padding-bottom:8px"></div></div>
+                    <div id="selected-chips" class="mt-3 hidden"><div class="text-xs font-black text-gray-500 mb-2">Ghế đang chọn:</div><div id="chips-list" class="flex flex-wrap gap-2"></div></div>
+                </div>
+            </div>
+            <div>
+                <div style="position:sticky;top:16px;border-radius:16px;padding:20px;color:white;background:linear-gradient(135deg,#1a1a2e,#16213e)">
+                    <div style="font-weight:900;font-size:13px;margin-bottom:12px" id="summary-event-name">Concert Cực Hott</div>
+                    <div style="font-size:12px;color:#9ca3af;margin-bottom:4px">📅 <span id="summary-date">18/04/2026</span></div>
+                    <div style="font-size:12px;color:#9ca3af;margin-bottom:4px">🕐 <span id="summary-time">19:30 – 22:00</span></div>
+                    <div style="font-size:12px;color:#9ca3af;margin-bottom:16px">📍 <span id="summary-venue">Vạn Phúc City</span></div>
+                    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:12px;margin-bottom:12px">
+                        <div id="summary-empty" style="color:#9ca3af;font-size:12px;text-align:center;padding:8px">Chưa chọn ghế nào</div>
+                        <div id="summary-seats" style="display:none;font-size:12px;line-height:1.8"></div>
+                    </div>
+                    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:12px">
+                        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span style="color:#9ca3af">Số vé:</span><span style="font-weight:700" id="sum-qty">0</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px"><span style="color:#9ca3af">Phí DV (5%):</span><span style="font-weight:700" id="sum-fee">0đ</span></div>
+                        <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:900"><span>Tổng:</span><span style="background:linear-gradient(135deg,#00f2fe,#fb00ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent" id="sum-total">0đ</span></div>
+                    </div>
+                    <button onclick="openPaymentModal()" style="width:100%;padding:12px;border-radius:12px;border:none;color:white;font-weight:900;font-size:13px;cursor:pointer;margin-top:16px;background:linear-gradient(135deg,#F33B26,#ff6b35)">🔒 Thanh toán ngay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL THANH TOÁN -->
+<div id="pay-modal">
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px">
+        <div style="background:white;border-radius:24px;width:100%;max-width:440px;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,.3)">
+            <div style="padding:20px 24px;background:linear-gradient(135deg,#F33B26,#ff6b35);color:white;display:flex;justify-content:space-between;align-items:center">
+                <div><div style="font-weight:900;font-size:17px">Thanh toán EventHub</div><div style="font-size:12px;color:rgba(255,255,255,.8)">Chuyển khoản / Quét QR</div></div>
+                <button onclick="closePayModal()" style="width:32px;height:32px;border-radius:50%;border:none;background:rgba(255,255,255,.2);color:white;font-size:16px;cursor:pointer">×</button>
+            </div>
+            <div id="pay-step-1" style="padding:24px">
+                <div style="background:#f8fafc;border-radius:12px;padding:16px;margin-bottom:16px;font-size:13px">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#6b7280">Sự kiện:</span><span style="font-weight:700;text-align:right;max-width:55%" id="pay-event">-</span></div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:#6b7280">Số vé:</span><span style="font-weight:700" id="pay-qty">0</span></div>
+                    <div style="display:flex;justify-content:space-between;font-size:16px;font-weight:900;color:#F33B26"><span>Tổng tiền:</span><span id="pay-total">0đ</span></div>
+                </div>
+                <div style="margin-bottom:16px">
+                    <div style="font-weight:900;font-size:13px;margin-bottom:10px;color:#111">Phương thức thanh toán:</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+                        <button onclick="selectPayMethod('mbbank',this)" id="pm-mbbank" style="border:2px solid #F33B26;background:#fef2f2;border-radius:10px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" class="pay-method-btn"><div style="font-size:18px;margin-bottom:3px">🏦</div><div style="font-size:10px;font-weight:900;color:#F33B26">MB Bank</div></button>
+                        <button onclick="selectPayMethod('momo',this)" id="pm-momo" style="border:2px solid #e5e7eb;background:#f9fafb;border-radius:10px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" class="pay-method-btn"><div style="font-size:18px;margin-bottom:3px">💜</div><div style="font-size:10px;font-weight:900;color:#ae2d91">MoMo</div></button>
+                        <button onclick="selectPayMethod('zalopay',this)" id="pm-zalopay" style="border:2px solid #e5e7eb;background:#f9fafb;border-radius:10px;padding:10px 6px;cursor:pointer;text-align:center;transition:.2s" class="pay-method-btn"><div style="font-size:18px;margin-bottom:3px">💙</div><div style="font-size:10px;font-weight:900;color:#0066cc">ZaloPay</div></button>
+                    </div>
+                </div>
+                <div style="margin-bottom:14px"><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">Họ và tên *</label><input id="buyer-name" type="text" placeholder="Nhập họ tên..." style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box"></div>
+                <div style="margin-bottom:20px"><label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:6px">Số điện thoại *</label><input id="buyer-phone" type="tel" placeholder="0xxx xxx xxx" style="width:100%;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;outline:none;box-sizing:border-box"></div>
+                <button onclick="goToQR()" style="width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,#F33B26,#ff6b35);color:white;font-weight:900;font-size:14px;cursor:pointer">Tiếp tục → Xem QR</button>
+            </div>
+            <div id="pay-step-2" style="padding:24px;display:none;text-align:center">
+                <div style="margin-bottom:12px"><span id="pay-countdown" style="display:inline-block;background:#fef2f2;color:#F33B26;padding:6px 16px;border-radius:999px;font-weight:900;font-size:13px">⏱ 15:00</span></div>
+                <div style="background:#f8fafc;border-radius:16px;padding:16px;margin-bottom:16px;display:inline-block"><img id="qr-img" src="" alt="QR Code" style="width:200px;height:200px;display:block;margin:0 auto 8px;border-radius:8px"><div style="font-size:11px;color:#6b7280;font-weight:700">Quét QR để thanh toán</div></div>
+                <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:12px;padding:12px;margin-bottom:16px;text-align:left;font-size:12px">
+                    <div style="font-weight:900;color:#c2410c;margin-bottom:6px">Thông tin chuyển khoản:</div>
+                    <div style="color:#374151;margin-bottom:2px">🏦 MB Bank · STK: <strong>0342856791</strong></div>
+                    <div style="color:#374151;margin-bottom:2px">👤 Chủ TK: <strong>NGUYEN DIEU THAO</strong></div>
+                    <div style="color:#374151;margin-bottom:2px">💬 Nội dung: <strong id="pay-content">EVENTHUB-XXX</strong></div>
+                    <div style="color:#F33B26;font-weight:900">💰 Số tiền: <span id="pay-amount-display">0đ</span></div>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <button onclick="showPayStep(1)" style="flex:1;padding:12px;border:1.5px solid #e5e7eb;border-radius:10px;background:white;font-weight:700;cursor:pointer;font-size:13px">← Quay lại</button>
+                    <button onclick="confirmPayment()" style="flex:2;padding:12px;border:none;border-radius:10px;background:#16a34a;color:white;font-weight:900;cursor:pointer;font-size:13px">✅ Xác nhận đã chuyển</button>
+                </div>
+            </div>
+            <div id="pay-step-3" style="padding:32px;display:none;text-align:center">
+                <div style="font-size:64px;margin-bottom:12px">🎉</div>
+                <h3 style="font-size:20px;font-weight:900;color:#16a34a;margin-bottom:8px">Đặt vé thành công!</h3>
+                <p style="color:#6b7280;font-size:13px;margin-bottom:6px">Mã đơn: <strong id="order-code" style="color:#F33B26"></strong></p>
+                <p style="color:#6b7280;font-size:12px;margin-bottom:20px">Vé điện tử gửi qua SMS/Email trong 5 phút</p>
+                <div style="display:flex;gap:10px;justify-content:center">
+                    <a href="dashboard.html" style="display:inline-block;padding:12px 20px;background:linear-gradient(135deg,#F33B26,#ff6b35);color:white;border-radius:12px;font-weight:900;font-size:13px;text-decoration:none">Xem vé của tôi</a>
+                    <button onclick="closePayModal();closeTicketModal();" style="padding:12px 20px;border:1.5px solid #e5e7eb;background:white;border-radius:12px;font-weight:700;cursor:pointer;font-size:13px">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ===== DARK MODE =====
+function toggleTheme(){const h=document.documentElement,i=document.getElementById('theme-icon');h.classList.toggle('dark');const d=h.classList.contains('dark');i.className=d?'fa-solid fa-sun text-yellow-300 text-sm':'fa-solid fa-moon text-gray-500 text-sm';localStorage.setItem('theme',d?'dark':'light')}
+(function(){if(localStorage.getItem('theme')==='dark'){document.documentElement.classList.add('dark');document.addEventListener('DOMContentLoaded',()=>{const i=document.getElementById('theme-icon');if(i)i.className='fa-solid fa-sun text-yellow-300 text-sm'})}})();
+
+// ===== AUTH UI =====
+function updateAuthUI(){
+    const user=JSON.parse(localStorage.getItem('currentUser')||'null');
+    const guestNav=document.getElementById('guest-nav');
+    const userNav=document.getElementById('user-nav');
+    if(!guestNav||!userNav)return;
+    if(user){
+        guestNav.classList.add('hidden');
+        userNav.classList.remove('hidden');
+        const i1=document.getElementById('header-avatar-initial'),i2=document.getElementById('header-username'),i3=document.getElementById('menu-name'),i4=document.getElementById('menu-email'),i5=document.getElementById('menu-balance');
+        if(i1)i1.textContent=(user.name||'U')[0].toUpperCase();
+        if(i2)i2.textContent=user.name||'User';
+        if(i3)i3.textContent=user.name||'Người dùng';
+        if(i4)i4.textContent=user.email||'';
+        if(i5)i5.textContent=parseInt(localStorage.getItem('userBalance')||'0').toLocaleString('vi-VN')+'đ';
+    }else{guestNav.classList.remove('hidden');userNav.classList.add('hidden')}
+}
+function toggleHeaderMenu(){document.getElementById('header-user-menu').classList.toggle('hidden')}
+function handleLogout(){localStorage.removeItem('currentUser');localStorage.removeItem('isLoggedIn');location.reload()}
+document.addEventListener('click',e=>{const m=document.getElementById('header-user-menu'),b=document.getElementById('user-nav');if(m&&b&&!b.contains(e.target))m.classList.add('hidden')});
+updateAuthUI();
+
+// ===== SEARCH =====
+function switchSearchTab(tab){
+    const g=tab==='genre';
+    document.getElementById('tab-genre').className=`pb-1 text-sm font-black border-b-2 transition ${g?'border-gray-800 text-gray-800':'border-transparent text-gray-400 hover:text-gray-600'}`;
+    document.getElementById('tab-city').className=`pb-1 text-sm font-black border-b-2 transition ${!g?'border-gray-800 text-gray-800':'border-transparent text-gray-400 hover:text-gray-600'}`;
+    document.getElementById('panel-genre').classList.toggle('hidden',!g);
+    document.getElementById('panel-city').classList.toggle('hidden',g);
+}
+function searchBy(v){document.getElementById('search-input').value=v;document.getElementById('search-suggestions').classList.add('hidden')}
+function doSearch(){const v=document.getElementById('search-input').value.trim();if(v)alert('Tìm kiếm: '+v);document.getElementById('search-suggestions').classList.add('hidden')}
+const si=document.getElementById('search-input'),sg=document.getElementById('search-suggestions');
+const allEvents=['GAI Home Concert 2026','Anh Trai Say Hi','MONO Concert Hà Nội','BTS World Tour Arirang','Concert Cực Hott 2026','Workshop UI/UX','MB Hanoi Cup 2026','Lễ Hội Văn Hoá Dân Gian','Tech Meetup Hà Nội','Triển Lãm Nghệ Thuật'];
+si.addEventListener('focus',()=>sg.classList.remove('hidden'));
+si.addEventListener('input',function(){
+    const q=this.value.trim().toLowerCase(),lr=document.getElementById('live-results'),tb=document.getElementById('trending-block');
+    if(q.length>0){tb.classList.add('hidden');lr.classList.remove('hidden');
+        const m=allEvents.filter(e=>e.toLowerCase().includes(q));
+        if(m.length>0)lr.innerHTML='<div class="text-[10px] font-black text-gray-400 uppercase mb-2">KẾT QUẢ</div>'+m.slice(0,5).map(e=>{const hi=e.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),x=>'<span style="color:#ec4899;font-weight:900">'+x+'</span>');return`<div class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-50 cursor-pointer" onclick="searchBy('${e}')"><i class="fa-solid fa-magnifying-glass text-gray-400 text-sm w-4"></i><span class="text-sm text-gray-700">${hi}</span></div>`}).join('');
+        else lr.innerHTML='<div class="text-gray-400 text-sm text-center py-2">Không tìm thấy kết quả</div>';
+    }else{tb.classList.remove('hidden');lr.classList.add('hidden')}
+});
+document.addEventListener('click',e=>{if(!si.contains(e.target)&&!sg.contains(e.target))sg.classList.add('hidden')});
+document.querySelectorAll('.suggestion-tag').forEach(t=>t.addEventListener('click',()=>{si.value=t.textContent.replace('#','');sg.classList.add('hidden')}));
+
+function subscribeNewsletter(){const e=document.getElementById('newsletter-email').value;if(!e||!e.includes('@'))return alert('Vui lòng nhập email hợp lệ!');alert('✅ Đăng ký thành công!');document.getElementById('newsletter-email').value=''}
+
+// ===== SEAT MAP =====
+let selectedSeats=[];
+const VIP_P=850000,REG_P=450000,MAX_S=4;
+const SOLD=['A1','A3','A5','B2','B4','C1','C3','D5','D8','E2','E10'];
+
+function buildSeatMap(){
+    const c=document.getElementById('seat-map');if(!c)return;
+    let h='<div style="margin-bottom:12px"><div style="font-size:10px;font-weight:900;color:#92400e;background:#fef9c3;display:inline-block;padding:3px 12px;border-radius:999px;margin-bottom:8px">KHU VIP – 850.000đ</div>';
+    ['A','B'].forEach(row=>{
+        h+=`<div style="margin-bottom:4px"><span style="font-size:9px;font-weight:900;color:#9ca3af;width:14px;display:inline-block">${row}</span>`;
+        for(let i=1;i<=12;i++){const id=`${row}${i}`,sold=SOLD.includes(id);h+=`<span class="seat ${sold?'sold':'vip'}" id="seat-${id}"${sold?'':` onclick="toggleSeat('${id}','vip')"`} title="${id}">${i}</span>`}
+        h+='</div>';
+    });
+    h+='</div><div><div style="font-size:10px;font-weight:900;color:#166534;background:#dcfce7;display:inline-block;padding:3px 12px;border-radius:999px;margin-bottom:8px">KHU THƯỜNG – 450.000đ</div>';
+    ['C','D','E','F'].forEach(row=>{
+        h+=`<div style="margin-bottom:4px"><span style="font-size:9px;font-weight:900;color:#9ca3af;width:14px;display:inline-block">${row}</span>`;
+        for(let i=1;i<=16;i++){const id=`${row}${i}`,sold=SOLD.includes(id);h+=`<span class="seat ${sold?'sold':'regular'}" id="seat-${id}"${sold?'':` onclick="toggleSeat('${id}','regular')"`} title="${id}">${i}</span>`}
+        h+='</div>';
+    });
+    h+='</div>';
+    c.innerHTML=h;
+}
+
+function toggleSeat(id,type){
+    const el=document.getElementById('seat-'+id);if(!el)return;
+    const idx=selectedSeats.findIndex(s=>s.id===id);
+    if(idx>=0){selectedSeats.splice(idx,1);el.classList.remove('selected');el.classList.add(type)}
+    else{if(selectedSeats.length>=MAX_S){alert('Tối đa '+MAX_S+' ghế!');return}selectedSeats.push({id,type});el.classList.add('selected')}
+    updateOrderSummary();
+}
+
+function updateOrderSummary(){
+    const ee=document.getElementById('summary-empty'),se=document.getElementById('summary-seats'),cc=document.getElementById('chips-list'),cp=document.getElementById('selected-chips');
+    const qe=document.getElementById('sum-qty'),fe=document.getElementById('sum-fee'),te=document.getElementById('sum-total');
+    if(!selectedSeats.length){
+        if(ee)ee.style.display='block';if(se)se.style.display='none';if(cp)cp.classList.add('hidden');
+        if(qe)qe.textContent='0';if(fe)fe.textContent='0đ';if(te)te.textContent='0đ';return;
+    }
+    if(ee)ee.style.display='none';if(se)se.style.display='block';if(cp)cp.classList.remove('hidden');
+    const sub=selectedSeats.reduce((s,x)=>s+(x.type==='vip'?VIP_P:REG_P),0),fee=Math.round(sub*.05),tot=sub+fee;
+    if(se)se.innerHTML=selectedSeats.map(x=>`<div style="display:flex;justify-content:space-between;margin-bottom:2px"><span>Ghế ${x.id}</span><span style="font-weight:700">${(x.type==='vip'?VIP_P:REG_P).toLocaleString('vi-VN')}đ</span></div>`).join('');
+    if(cc)cc.innerHTML=selectedSeats.map(x=>`<span style="font-size:11px;background:rgba(236,72,153,.15);color:#db2777;padding:3px 10px;border-radius:999px;font-weight:700">${x.id}</span>`).join('');
+    if(qe)qe.textContent=selectedSeats.length;
+    if(fe)fe.textContent=fee.toLocaleString('vi-VN')+'đ';
+    if(te)te.textContent=tot.toLocaleString('vi-VN')+'đ';
+}
+
+function selectShow(btn,date,start,end,venue){
+    document.querySelectorAll('.show-btn').forEach(b=>{b.style.borderColor='#e5e7eb';b.style.background='#f9fafb';b.querySelector('div').style.color='#374151'});
+    btn.style.borderColor='#F33B26';btn.style.background='#fef2f2';btn.querySelector('div').style.color='#F33B26';
+    const d=document.getElementById('summary-date'),t=document.getElementById('summary-time'),v=document.getElementById('summary-venue');
+    if(d)d.textContent=date;if(t)t.textContent=`${start} – ${end}`;if(v)v.textContent=venue;
+}
+
+function openTicketModal(name){
+    const user=JSON.parse(localStorage.getItem('currentUser')||'null');
+    if(!user){if(confirm('Bạn cần đăng nhập để đặt vé. Đăng nhập ngay?'))window.location.href='auth.html?mode=login&redirect=index.html';return}
+    document.getElementById('modal-event-name').textContent=name||'Chọn vé';
+    document.getElementById('summary-event-name').textContent=name||'';
+    selectedSeats=[];buildSeatMap();updateOrderSummary();
+    document.getElementById('ticket-modal').classList.remove('hidden');
+    document.body.style.overflow='hidden';
+}
+function closeTicketModal(){document.getElementById('ticket-modal').classList.add('hidden');document.body.style.overflow=''}
+document.getElementById('ticket-modal').addEventListener('click',function(e){if(e.target===this)closeTicketModal()});
+
+// ===== PAYMENT =====
+let payTimer=null,curPayMethod='mbbank';
+function openPaymentModal(){
+    if(!selectedSeats.length){alert('Vui lòng chọn ít nhất 1 ghế!');return}
+    const sub=selectedSeats.reduce((s,x)=>s+(x.type==='vip'?VIP_P:REG_P),0),fee=Math.round(sub*.05),tot=sub+fee;
+    document.getElementById('pay-event').textContent=document.getElementById('modal-event-name').textContent;
+    document.getElementById('pay-qty').textContent=selectedSeats.length+' vé';
+    document.getElementById('pay-total').textContent=tot.toLocaleString('vi-VN')+'đ';
+    const user=JSON.parse(localStorage.getItem('currentUser')||'null');
+    if(user){const bn=document.getElementById('buyer-name'),bp=document.getElementById('buyer-phone');if(bn)bn.value=user.name||'';if(bp)bp.value=user.phone||''}
+    showPayStep(1);document.getElementById('pay-modal').classList.add('show');document.body.style.overflow='hidden';
+}
+function closePayModal(){document.getElementById('pay-modal').classList.remove('show');document.body.style.overflow='';if(payTimer){clearInterval(payTimer);payTimer=null}}
+document.getElementById('pay-modal').addEventListener('click',function(e){if(e.target===this)closePayModal()});
+function showPayStep(n){[1,2,3].forEach(i=>{document.getElementById('pay-step-'+i).style.display=i===n?'block':'none'})}
+function selectPayMethod(m,btn){curPayMethod=m;document.querySelectorAll('.pay-method-btn').forEach(b=>{b.style.borderColor='#e5e7eb';b.style.background='#f9fafb'});btn.style.borderColor='#F33B26';btn.style.background='#fef2f2'}
+function goToQR(){
+    const name=document.getElementById('buyer-name').value.trim(),phone=document.getElementById('buyer-phone').value.trim();
+    if(!name||!phone){alert('Vui lòng điền đầy đủ họ tên và số điện thoại!');return}
+    const sub=selectedSeats.reduce((s,x)=>s+(x.type==='vip'?VIP_P:REG_P),0),fee=Math.round(sub*.05),tot=sub+fee;
+    const code='EH'+Date.now().toString().slice(-6);
+    document.getElementById('order-code').textContent='#'+code;
+    document.getElementById('pay-content').textContent='EVENTHUB '+code;
+    document.getElementById('pay-amount-display').textContent=tot.toLocaleString('vi-VN')+'đ';
+    const qrData=encodeURIComponent('EVENTHUB '+code);
+    document.getElementById('qr-img').src=`https://img.vietqr.io/image/MB-0342856791-compact2.jpg?amount=${tot}&addInfo=${qrData}&accountName=NGUYEN%20DIEU%20THAO`;
+    showPayStep(2);
+    let sec=15*60;if(payTimer)clearInterval(payTimer);
+    payTimer=setInterval(()=>{sec--;const m=Math.floor(sec/60).toString().padStart(2,'0'),s=(sec%60).toString().padStart(2,'0');const el=document.getElementById('pay-countdown');if(el)el.textContent=`⏱ ${m}:${s}`;if(sec<=0){clearInterval(payTimer);alert('Hết thời gian! Vui lòng thử lại.');showPayStep(1)}},1000);
+}
+function confirmPayment(){
+    if(payTimer){clearInterval(payTimer);payTimer=null}
+    const code=document.getElementById('pay-content').textContent.replace('EVENTHUB ','');
+    const orders=JSON.parse(localStorage.getItem('my_orders')||'[]');
+    const sub=selectedSeats.reduce((s,x)=>s+(x.type==='vip'?VIP_P:REG_P),0);
+    orders.push({id:code,event:document.getElementById('modal-event-name').textContent,seats:selectedSeats.map(x=>x.id),total:sub+Math.round(sub*.05),date:new Date().toLocaleString('vi-VN'),buyer:document.getElementById('buyer-name').value,phone:document.getElementById('buyer-phone').value});
+    localStorage.setItem('my_orders',JSON.stringify(orders));
+    showPayStep(3);
+}
+</script>
+</body>
+</html>
