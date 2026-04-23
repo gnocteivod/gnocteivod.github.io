@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="vi" class="">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sự kiện - EventHub</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script src="auth-helper.js"></script>
+<style>
+html.dark body{background:#0f0f1a!important;color:#e5e7eb!important}
+html.dark header{background:rgba(10,10,15,.95)!important;border-color:rgba(255,255,255,.08)!important}
+html.dark .event-card{background:#1e1e2e!important;border-color:rgba(255,255,255,.08)!important}
+html.dark .text-gray-800,.dark .text-gray-900{color:#e5e7eb!important}
+html.dark .text-gray-600,.dark .text-gray-500{color:#9ca3af!important}
+html.dark .bg-white{background:#1e1e2e!important}
+html.dark .bg-gray-50{background:#151520!important}
+body{background:#f8fafc;min-height:100vh}
+.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+.cat-nav{background:#1a1a1a}
+.cat-nav a{color:#999;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:0 14px;white-space:nowrap;transition:color .2s;text-decoration:none}
+.cat-nav a:hover,.cat-nav a.active{color:#fff}
+.event-card{background:white;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid #f3f4f6;transition:all .3s;text-decoration:none;display:block}
+.event-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.12);transform:translateY(-2px)}
+.filter-btn{padding:8px 18px;border-radius:999px;font-size:12px;font-weight:700;border:2px solid #e5e7eb;background:white;cursor:pointer;transition:.2s;color:#374151}
+.filter-btn.active,.filter-btn:hover{border-color:#F33B26;color:#F33B26;background:#fef2f2}
+</style>
+</head>
+<body>
+<!-- HEADER -->
+<header class="sticky top-0 z-[100] bg-white/95 backdrop-blur-lg border-b border-gray-100 shadow-sm">
+  <div class="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between gap-6">
+    <div class="flex items-center space-x-8 flex-shrink-0">
+      <a href="index.html"><h1 class="text-3xl font-black text-[#F33B26] tracking-tighter">EventHub</h1></a>
+      <nav class="hidden xl:flex space-x-5 font-bold text-gray-600 text-sm">
+        <a href="index.html" class="hover:text-pink-500 transition">Trang chủ</a>
+        <a href="events.html" class="text-pink-500">Sự kiện</a>
+        <a href="calendar.html" class="hover:text-blue-400 transition">Lịch</a>
+        <a href="blog.html" class="hover:text-blue-400 transition">Blog</a>
+        <a href="contact.html" class="hover:text-blue-400 transition">Liên hệ</a>
+      </nav>
+    </div>
+    <div class="flex items-center gap-3 flex-shrink-0">
+      <button onclick="toggleTheme()" class="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center hover:bg-gray-200 transition"><i id="theme-icon" class="fa-solid fa-moon text-gray-500 text-sm"></i></button>
+      <div id="guest-nav" class="flex items-center bg-gray-100/80 rounded-full p-1 border border-gray-200">
+        <a href="auth.html?mode=login" class="bg-white text-gray-700 px-4 py-1.5 rounded-full shadow-sm text-xs font-bold hover:text-pink-500 transition">Đăng nhập</a>
+        <a href="auth.html?mode=register" class="text-gray-500 px-3 py-1.5 text-xs font-bold hover:text-blue-500 transition">Đăng ký</a>
+      </div>
+      <div id="user-nav" class="hidden relative">
+        <div onclick="toggleHeaderMenu()" class="flex items-center gap-2 bg-white/50 border border-pink-100 rounded-full p-1 pr-3 cursor-pointer shadow-sm hover:shadow transition">
+          <div id="header-avatar-initial" class="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 to-violet-500 flex items-center justify-center text-white font-black text-sm">U</div>
+          <span id="header-username" class="text-xs font-bold text-pink-600 max-w-[80px] truncate">User</span>
+          <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+        </div>
+        <div id="header-user-menu" class="hidden absolute right-0 top-[110%] w-52 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white p-2 z-50">
+          <div class="px-3 py-2 border-b border-gray-100 mb-1">
+            <p id="menu-name" class="text-sm font-black text-gray-800">Người dùng</p>
+            <p id="menu-email" class="text-[10px] text-gray-400 truncate"></p>
+            <p class="text-[10px] font-bold text-pink-500 mt-0.5">Số dư: <span id="menu-balance">0đ</span></p>
+          </div>
+          <a href="dashboard.html" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-gray-600 hover:bg-pink-50 hover:text-pink-500 rounded-xl transition"><i class="fa-solid fa-user-gear w-4"></i> Tài khoản</a>
+          <a href="dashboard.html" class="flex items-center gap-2 px-3 py-2.5 text-xs font-bold text-gray-600 hover:bg-pink-50 hover:text-pink-500 rounded-xl transition"><i class="fa-solid fa-ticket-simple w-4 text-pink-400"></i> Vé của tôi</a>
+          <button onclick="handleLogout()" class="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-black text-red-500 hover:bg-red-50 rounded-xl transition"><i class="fa-solid fa-power-off w-4"></i> Đăng xuất</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="cat-nav">
+    <div class="max-w-[1400px] mx-auto px-4 flex items-center overflow-x-auto no-scrollbar h-10 gap-1">
+      <a href="events.html" onclick="filterCategory('all',this)" class="active" id="cat-all">Tất cả</a>
+      <a href="javascript:void(0)" onclick="filterCategory('music',this)" id="cat-music">Âm nhạc</a>
+      <a href="javascript:void(0)" onclick="filterCategory('concert',this)" id="cat-concert">Concert</a>
+      <a href="javascript:void(0)" onclick="filterCategory('theater',this)" id="cat-theater">Sân khấu</a>
+      <a href="javascript:void(0)" onclick="filterCategory('workshop',this)" id="cat-workshop">Workshop</a>
+      <a href="javascript:void(0)" onclick="filterCategory('sport',this)" id="cat-sport">Thể thao</a>
+      <a href="javascript:void(0)" onclick="filterCategory('expo',this)" id="cat-expo">Triển lãm</a>
+      <a href="javascript:void(0)" onclick="filterCategory('free',this)" id="cat-free">Miễn phí</a>
+      <a href="create.html" class="ml-auto" style="color:#F33B26">+ Tạo sự kiện</a>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-[1400px] mx-auto px-4 py-8">
+  <!-- Tiêu đề + bộ lọc -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+    <div>
+      <h2 id="page-title" class="text-3xl font-black text-gray-900">Tất cả sự kiện</h2>
+      <p id="page-subtitle" class="text-gray-400 text-sm mt-1">Khám phá hàng trăm sự kiện đang chờ bạn</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <select id="sort-select" onchange="sortEvents()" class="border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold bg-white outline-none cursor-pointer">
+        <option value="hot">Phổ biến nhất</option>
+        <option value="date">Sắp diễn ra</option>
+        <option value="price-asc">Giá thấp nhất</option>
+        <option value="price-desc">Giá cao nhất</option>
+        <option value="free">Miễn phí</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Lưới sự kiện -->
+  <div id="events-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"></div>
+
+  <!-- Empty state -->
+  <div id="empty-state" class="hidden text-center py-20">
+    <div class="text-6xl mb-4">🔍</div>
+    <h3 class="text-xl font-black text-gray-600 mb-2">Không tìm thấy sự kiện</h3>
+    <p class="text-gray-400 text-sm">Thử chọn thể loại khác hoặc quay lại sau</p>
+    <a href="events.html" class="mt-4 inline-block bg-[#F33B26] text-white px-6 py-2 rounded-full font-bold text-sm">Xem tất cả</a>
+  </div>
+</main>
+
+<footer class="bg-[#1a1a1a] text-white mt-20">
+  <div class="max-w-[1400px] mx-auto px-4 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
+    <h2 class="text-2xl font-black text-[#F33B26]">EventHub</h2>
+    <p class="text-gray-400 text-sm">© 2026 EventHub - Trải nghiệm sự kiện tuyệt vời nhất</p>
+    <div class="flex gap-3">
+      <a href="#" class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-blue-600 transition"><i class="fa-brands fa-facebook-f text-sm"></i></a>
+      <a href="#" class="w-9 h-9 bg-white/10 rounded-full flex items-center justify-center hover:bg-pink-500 transition"><i class="fa-brands fa-instagram text-sm"></i></a>
+    </div>
+  </div>
+</footer>
+
+<script>
+const ALL_EVENTS = [
+  {id:21,title:'Concert Cực Hott - Đêm Nhạc Đặc Biệt',img:'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=400',cat:'music',tag:'Âm nhạc',tagColor:'text-pink-500',date:'18.04.2026',loc:'Vạn Phúc City, Hà Đông',price:1000000,priceLabel:'Từ 1.000.000đ',priceColor:'text-[#F33B26]',badge:'Còn vé',badgeColor:'bg-green-100 text-green-600',hot:true},
+  {id:26,title:'BTS World Tour Arirang 2026',img:'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400',cat:'concert',tag:'Concert',tagColor:'text-red-500',date:'18.05.2026',loc:'SVĐ Quốc gia Mỹ Đình',price:300000,priceLabel:'Từ 300.000đ',priceColor:'text-[#F33B26]',badge:'Sắp hết',badgeColor:'bg-yellow-100 text-yellow-600',hot:true},
+  {id:3,title:'Workshop Thiết Kế UI/UX Thực Chiến',img:'https://images.unsplash.com/photo-1514525253361-bee8718a34a1?w=400',cat:'workshop',tag:'Workshop',tagColor:'text-blue-500',date:'20.04.2026',loc:'Cầu Giấy, Hà Nội',price:300000,priceLabel:'Từ 300.000đ',priceColor:'text-[#F33B26]',badge:'Còn vé',badgeColor:'bg-green-100 text-green-600'},
+  {id:4,title:'MB Hanoi Cup 2026 - Giải Bóng Đá Phủi',img:'https://images.unsplash.com/photo-1471295253337-3ceaaedca402?w=400',cat:'sport',tag:'Thể thao',tagColor:'text-green-600',date:'01.05.2026',loc:'Sân Mỹ Đình, Hà Nội',price:0,priceLabel:'Miễn phí',priceColor:'text-green-500',badge:'Còn vé',badgeColor:'bg-green-100 text-green-600',free:true},
+  {id:5,title:'Kịch Nói - Bức Tường & Những Người Bạn',img:'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?w=400',cat:'theater',tag:'Sân khấu',tagColor:'text-purple-500',date:'25.04.2026',loc:'Nhà hát Tuổi Trẻ, HN',price:200000,priceLabel:'Từ 200.000đ',priceColor:'text-[#F33B26]',badge:'Còn vé',badgeColor:'bg-green-100 text-green-600'},
+  {id:6,title:'Triển Lãm Nghệ Thuật Đương Đại 2026',img:'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=400',cat:'expo',tag:'Triển lãm',tagColor:'text-orange-500',date:'28.04.2026',loc:'Bảo tàng Mỹ thuật, HN',price:0,priceLabel:'Miễn phí',priceColor:'text-green-500',badge:'Còn vé',badgeColor:'bg-green-100 text-green-600',free:true},
+  {id:7,title:'Lễ Hội Văn Hoá Dân Gian 2026',img:'https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=400',cat:'expo',tag:'Lễ hội',tagColor:'text-orange-500',date:'15.04.2026',loc:'Văn Miếu, Hà Nội',price:0,priceLabel:'Miễn phí',priceColor:'text-green-500',badge:'Còn vé',badgeColor:'bg-green-100 text-green-600',free:true},
+  {id:8,title:'Tech Meetup Hà Nội - Tháng 4/2026',img:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',cat:'workshop',tag:'Hội thảo',tagColor:'text-blue-500',date:'22.04.2026',loc:'Cầu Giấy, Hà Nội',price:0,priceLabel:'Miễn phí',priceColor:'text-green-500',badge:'Còn vé',badgeColor:'bg-green-100 text-green-600',free:true},
+  {id:9,title:'Anh Trai Say Hi - Live Concert',img:'https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?w=400',cat:'music',tag:'Âm nhạc',tagColor:'text-pink-500',date:'30.04.2026',loc:'Nhà Thi Đấu Phan Đình Phùng',price:500000,priceLabel:'Từ 500.000đ',priceColor:'text-[#F33B26]',badge:'Còn vé',badgeColor:'bg-green-100 text-green-600',hot:true},
+  {id:10,title:'MONO - Những Thành Phố Mơ Màng',img:'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400',cat:'music',tag:'Âm nhạc',tagColor:'text-pink-500',date:'15.05.2026',loc:'Cung TT Quần Ngựa, HN',price:800000,priceLabel:'Từ 800.000đ',priceColor:'text-[#F33B26]',badge:'Còn vé',badgeColor:'bg-green-100 text-green-600'},
+  {id:11,title:'Workshop Làm Gốm Sáng Tạo',img:'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=400',cat:'workshop',tag:'Workshop',tagColor:'text-blue-500',date:'05.05.2026',loc:'Tây Hồ, Hà Nội',price:350000,priceLabel:'Từ 350.000đ',priceColor:'text-[#F33B26]',badge:'Còn vé',badgeColor:'bg-green-100 text-green-600'},
+  {id:12,title:'IDECAF - Sân Khấu Kịch Nói',img:'https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=400',cat:'theater',tag:'Sân khấu',tagColor:'text-purple-500',date:'10.05.2026',loc:'Nhà hát Bến Thành, HCM',price:300000,priceLabel:'Từ 300.000đ',priceColor:'text-[#F33B26]',badge:'Còn vé',badgeColor:'bg-green-100 text-green-600'},
+];
+
+let currentCat = 'all';
+let currentSort = 'hot';
+
+function renderEvents(events) {
+  const grid = document.getElementById('events-grid');
+  const empty = document.getElementById('empty-state');
+  if (!events.length) {
+    grid.innerHTML = '';
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+  grid.innerHTML = events.map(e => `
+    <a href="detail.html?id=${e.id}" class="event-card group">
+      <div class="relative aspect-video overflow-hidden">
+        <img src="${e.img}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy">
+        <div class="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg text-[10px] font-black ${e.tagColor} uppercase">${e.tag}</div>
+        ${e.hot ? '<div class="absolute top-3 right-3 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-full font-black">HOT</div>' : ''}
+      </div>
+      <div class="p-4 space-y-2">
+        <p class="font-black text-gray-800 text-sm line-clamp-2 group-hover:text-pink-500 transition">${e.title}</p>
+        <div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium"><i class="fa-regular fa-calendar text-pink-400"></i> ${e.date}</div>
+        <div class="flex items-center gap-1.5 text-xs text-gray-400 font-medium"><i class="fa-solid fa-location-dot text-blue-400"></i> ${e.loc}</div>
+        <div class="flex items-center justify-between pt-1">
+          <span class="text-sm font-black ${e.priceColor}">${e.priceLabel}</span>
+          <span class="text-[10px] ${e.badgeColor} px-2 py-0.5 rounded-full font-bold">${e.badge}</span>
+        </div>
+      </div>
+    </a>
+  `).join('');
+}
+
+function filterCategory(cat, el) {
+  currentCat = cat;
+  document.querySelectorAll('.cat-nav a').forEach(a => a.classList.remove('active'));
+  if (el) el.classList.add('active');
+  const titleMap = {all:'Tất cả sự kiện',music:'Sự kiện Âm nhạc',concert:'Concert',theater:'Sân khấu & Kịch nói',workshop:'Workshop & Hội thảo',sport:'Thể thao',expo:'Triển lãm & Lễ hội',free:'Sự kiện Miễn phí'};
+  document.getElementById('page-title').textContent = titleMap[cat] || 'Sự kiện';
+  applyFilter();
+}
+
+function sortEvents() {
+  currentSort = document.getElementById('sort-select').value;
+  applyFilter();
+}
+
+function applyFilter() {
+  let filtered = [...ALL_EVENTS];
+  if (currentCat === 'free') filtered = filtered.filter(e => e.free);
+  else if (currentCat !== 'all') filtered = filtered.filter(e => e.cat === currentCat);
+  if (currentSort === 'hot') filtered.sort((a,b) => (b.hot?1:0)-(a.hot?1:0));
+  else if (currentSort === 'price-asc') filtered.sort((a,b) => a.price-b.price);
+  else if (currentSort === 'price-desc') filtered.sort((a,b) => b.price-a.price);
+  else if (currentSort === 'free') filtered = filtered.filter(e => e.free);
+  renderEvents(filtered);
+}
+
+// Đọc query param để lọc theo category
+const urlParams = new URLSearchParams(window.location.search);
+const initCat = urlParams.get('cat') || 'all';
+const catEl = document.getElementById('cat-' + initCat);
+filterCategory(initCat, catEl);
+
+// auth-helper.js handles updateHeaderAuth automatically on DOMContentLoaded
+</script>
+</body>
+</html>
