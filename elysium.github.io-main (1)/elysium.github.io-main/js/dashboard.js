@@ -1,0 +1,857 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { firebaseConfig } from './firebase-config.js';
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    let currentBalance = parseInt(localStorage.getItem('currentBalance')) || 0;
+    function syncBalanceToUI(amount) {
+    const walletBalance = document.getElementById('balance-wallet');
+    if (walletBalance) {
+        walletBalance.innerText = `${new Intl.NumberFormat('vi-VN').format(amount)}đ`;
+        }
+    }
+
+    syncBalanceToUI(currentBalance);
+
+    let selectedMethod = '';
+    const authZone = document.getElementById('auth-zone');
+    const dropdownMenu = document.getElementById('dropdown-menu');
+
+    function updateRealTime() {
+        const dateElement = document.getElementById('real-time-date');
+        if (dateElement) {
+            const now = new Date();
+            const days = now.getDate();
+            const months = now.getMonth() + 1;
+            const years = now.getFullYear();
+            dateElement.innerText = `${days} Tháng ${months}, ${years}`;
+        }
+    }
+
+    function updateTopBarUI() {
+        const userLocal = JSON.parse(localStorage.getItem('userLogin'));
+        if (userLocal) {
+            const welcomeName = document.getElementById('user-welcome-name');
+            if (welcomeName) welcomeName.innerText = (userLocal.name || "Bạn") + " ✨";
+
+            const locationElement = document.getElementById('user-location');
+            if (locationElement) {
+                locationElement.innerText = userLocal.address || "Việt Nam";
+            }
+        }
+    }
+
+    function renderAuthZone(userObj) {
+        authZone.innerHTML = `
+            <div id="avatar-btn" class="flex items-center gap-3 bg-white/50 backdrop-blur-sm p-1 pr-4 rounded-full border border-pink-100 shadow-sm cursor-pointer">
+                <img id="header-avatar-img"
+                     src="https://api.dicebear.com/7.x/adventurer/svg?seed=${userObj.uid || 'default'}" 
+                     class="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover">
+                <div class="flex flex-col">
+                    <span class="text-[10px] text-gray-400 leading-none uppercase">Thành viên</span>
+                    <span id="header-name" class="text-xs text-pink-600 truncate max-w-[100px] font-bold">${userObj.name || 'User'}</span>
+                </div>
+                <button id="logout-btn" class="ml-2 text-gray-400 hover:text-red-500 transition">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </div>
+        `;
+        
+        const headerAvatarImg = document.getElementById('header-avatar-img');
+        if (headerAvatarImg && userObj.avatar) {
+            headerAvatarImg.src = userObj.avatar;
+        }
+
+        document.getElementById('avatar-btn').onclick = (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('active');
+        };
+
+        document.getElementById('logout-btn').onclick = (e) => {
+        e.stopPropagation();
+        signOut(auth).then(() => {
+            localStorage.removeItem('userLogin');
+            window.location.href = 'index.html';
+        }).catch((error) => {
+            console.error("Lỗi khi đăng xuất:", error);
+        });
+    };
+}
+
+    updateRealTime();
+    updateTopBarUI();
+
+    const cachedUser = JSON.parse(localStorage.getItem('userLogin'));
+    if (cachedUser) {
+        renderAuthZone(cachedUser);
+    }
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            let existingData = JSON.parse(localStorage.getItem('userLogin')) || {};
+
+            const userObj = {
+                ...existingData,
+                name: existingData.name || user.displayName || "User",
+                email: user.email,
+                uid: user.uid,
+                avatar: existingData.avatar || user.photoURL
+            };
+
+            localStorage.setItem('userLogin', JSON.stringify(userObj));
+            updateTopBarUI();
+            renderAuthZone(userObj);
+        }
+    });;
+
+    function updateBalanceUI(newAmount) {
+    const walletBalance = document.getElementById('balance-wallet');
+    if (!walletBalance) return;
+
+    const start = currentBalance; 
+    const end = newAmount;      
+    currentBalance = newAmount;  
+
+    const duration = 1000; 
+    let startTime = null;
+
+    function animation(currentTime) {
+        if (!startTime) startTime = currentTime;
+        const progress = Math.min((currentTime - startTime) / duration, 1);
+        const currentDisplay = Math.floor(progress * (end - start) + start);
+        walletBalance.innerText = `${new Intl.NumberFormat('vi-VN').format(currentDisplay)}đ`;
+        if (progress < 1) requestAnimationFrame(animation);
+        }
+    requestAnimationFrame(animation);
+    }
+
+    
+    function addHistoryEntry(amount, isLoadPage = false, type = 'deposit', description = 'Nạp tiền hệ thống') {
+    const historyContainer = document.getElementById('history-list');
+    if (!historyContainer) return;
+
+    const emptyMsg = historyContainer.querySelector('p.opacity-50');
+    if (emptyMsg) {
+        historyContainer.innerHTML = '';
+    }
+
+    const now = new Date();
+    const dateStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} - ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    const formattedAmount = new Intl.NumberFormat('vi-VN').format(amount);
+    
+    const isDeposit = type === 'deposit';
+    const colorClass = isDeposit ? 'text-green-500' : 'text-red-500';
+    const symbol = isDeposit ? '+' : '-';
+    const iconClass = isDeposit ? 'fa-square-plus' : 'fa-ticket-simple'; 
+
+    const entryHTML = `
+        <div class="flex justify-between items-center p-5 bg-gray-50 rounded-[2rem] border border-white shadow-sm animate-fadeIn mb-3">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm ${colorClass}">
+                    <i class="fa-solid ${iconClass}"></i>
+                </div>
+                <div>
+                    <p class="font-black text-sm">${description}</p>
+                    <p class="text-[10px] font-bold text-gray-400">${dateStr}</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <p class="${colorClass} font-black">${symbol}${formattedAmount}đ</p>
+                <button onclick="printInvoice('${description}', '${formattedAmount}')" 
+                        class="text-gray-400 hover:text-pink-500 transition-colors">
+                    <i class="fa-solid fa-receipt text-lg"></i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    historyContainer.insertAdjacentHTML('afterbegin', entryHTML);
+
+    if (!isLoadPage) {
+        let history = JSON.parse(localStorage.getItem('wallet_history')) || [];
+        history.push({ 
+            amount, 
+            date: dateStr, 
+            type: type, 
+            description: description 
+        });
+        localStorage.setItem('wallet_history', JSON.stringify(history));
+    }
+}
+    window.addHistoryEntry = addHistoryEntry;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const walletBalance = document.getElementById('balance-wallet');
+        if (walletBalance) {
+            walletBalance.innerText = `${new Intl.NumberFormat('vi-VN').format(currentBalance)}đ`;
+        }
+        let history = JSON.parse(localStorage.getItem('wallet_history')) || [];
+        history.forEach(item => {
+            addHistoryEntry(item.amount, true, item.type || 'deposit', item.description || 'Nạp tiền hệ thống'); 
+        });
+    });
+
+    function processPayment() {
+        const amountInput = document.getElementById('nap-tien-input').value;
+        const amount = parseInt(amountInput);
+        if (!amount || amount < 10000) return alert("Vui lòng nạp tối thiểu 10.000đ!");
+        if (!selectedMethod) return alert("Vui lòng chọn phương thức thanh toán!");
+
+        document.getElementById('nap-tien-step-1').classList.add('hidden');
+        document.getElementById('nap-tien-step-2').classList.remove('hidden');
+        document.getElementById('display-amount').innerText = new Intl.NumberFormat('vi-VN').format(amount) + 'đ';
+
+        const qrImg = document.getElementById('qr-image');
+        if (selectedMethod === 'bank') {
+            qrImg.src = `https://img.vietqr.io/image/MB-0378217462-qr_only.png?amount=${amount}&addInfo=EHP${amount}NAPVI`;
+        } else {
+            qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=MOMO_PAYMENT_${amount}&color=A50064`;
+        }
+    }
+
+    function simulateSuccess(event) {
+    const amountInput = document.getElementById('nap-tien-input').value;
+    const amount = parseInt(amountInput);
+    
+    if (!amount || amount < 10000) return alert("Vui lòng nạp tối thiểu 10.000đ!");
+
+    const btn = event.currentTarget;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch animate-spin"></i> ĐANG XÁC THỰC...';
+    btn.disabled = true;
+
+    setTimeout(() => {
+        const contentLabel = selectedMethod === 'bank' ? "Nạp tiền qua Ngân hàng" : "Nạp tiền qua Momo";
+        
+        const newTotal = currentBalance + amount;
+        
+        localStorage.setItem('currentBalance', newTotal);
+
+        updateBalanceUI(newTotal); 
+        
+        sendDepositToAdmin(amount, contentLabel); 
+        addHistoryEntry(amount);
+        
+        closeModal('modal-nap-tien');
+        btn.innerHTML = 'XÁC NHẬN ĐÃ CHUYỂN'; 
+        btn.disabled = false;
+        backToStep1();
+        
+        alert(`Nạp thành công ${new Intl.NumberFormat('vi-VN').format(amount)}đ!`);
+    }, 1500);
+}
+
+    function sendDepositToAdmin(amount, content) {
+        let logs = JSON.parse(localStorage.getItem('admin_deposit_logs')) || [];
+        const userLocal = JSON.parse(localStorage.getItem('userLogin'));
+        
+        const newTransaction = {
+            id: 'GD' + Math.floor(1000 + Math.random() * 9000),
+            user: userLocal ? userLocal.name : "Khách", 
+            amount: amount,
+            content: content,
+            time: new Date().toLocaleString('vi-VN'),
+            status: 'completed'
+        };
+        logs.push(newTransaction);
+        localStorage.setItem('admin_deposit_logs', JSON.stringify(logs));
+        window.dispatchEvent(new Event('storage_updated'));
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function backToStep1() {
+        document.getElementById('nap-tien-step-1').classList.remove('hidden');
+        document.getElementById('nap-tien-step-2').classList.add('hidden');
+    }
+
+    function handleAvatarChange(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+            const base64Image = e.target.result;
+
+            const previewImg = document.getElementById('profile-avatar-preview');
+            if (previewImg) previewImg.src = base64Image;
+            
+            window.tempAvatar = base64Image;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+    function updateUserProfile() {
+        const newName = document.getElementById('edit-fullname').value;
+        const newPhone = document.getElementById('edit-phone').value;
+        const newAddress = document.getElementById('edit-address').value;
+        if (!newName) return alert("Họ và tên không được để trống!");
+        let userLocal = JSON.parse(localStorage.getItem('userLogin')) || {};
+        userLocal.name = newName;
+        userLocal.phone = newPhone;
+        userLocal.address = newAddress;
+        if (window.tempAvatar) {
+            userLocal.avatar = window.tempAvatar;
+        }
+
+        localStorage.setItem('userLogin', JSON.stringify(userLocal));
+        window.tempAvatar = null; 
+
+        const welcomeName = document.getElementById('user-welcome-name');
+        if (welcomeName) welcomeName.innerText = newName + " ✨";
+
+        const locationEl = document.getElementById('user-location');
+        if (locationEl) locationEl.innerText = newAddress || "Việt Nam";
+
+        const headerName = document.querySelector('#avatar-btn .text-pink-600');
+        const headerImg  = document.querySelector('#avatar-btn img');
+        if (headerName) headerName.innerText = newName;
+        if (headerImg && userLocal.avatar) headerImg.src = userLocal.avatar;
+
+        const profileName = document.getElementById('profile-name-display');
+        if (profileName) profileName.innerText = newName;
+
+        const previewImg = document.getElementById('profile-avatar-preview');
+        if (previewImg && userLocal.avatar) previewImg.src = userLocal.avatar;
+
+        alert("Cập nhật hồ sơ thành công!");
+    }
+
+    function changePassword() {
+    const oldPass = document.getElementById('old-pass').value;
+    const newPass = document.getElementById('new-pass').value;
+
+    if (!oldPass || !newPass) return alert("Vui lòng nhập đầy đủ mật khẩu!");
+    if (newPass.length < 6) return alert("Mật khẩu mới phải có ít nhất 6 ký tự!");
+
+    let userLocal = JSON.parse(localStorage.getItem('userLogin')) || {};
+    
+    userLocal.password = newPass; 
+    localStorage.setItem('userLogin', JSON.stringify(userLocal));
+
+    alert("Đổi mật khẩu thành công!");
+    document.getElementById('old-pass').value = '';
+    document.getElementById('new-pass').value = '';
+    }
+  
+    function loadProfileToInputs() {
+    const userLocal = JSON.parse(localStorage.getItem('userLogin'));
+    if (!userLocal) return;
+
+    if (document.getElementById('edit-fullname')) document.getElementById('edit-fullname').value = userLocal.name    || "";
+    if (document.getElementById('edit-phone'))    document.getElementById('edit-phone').value    = userLocal.phone   || "";
+    if (document.getElementById('edit-address'))  document.getElementById('edit-address').value  = userLocal.address || "";
+    if (document.getElementById('edit-email'))    document.getElementById('edit-email').value    = userLocal.email   || "";
+
+    const profileName = document.getElementById('profile-name-display');
+    if (profileName) profileName.innerText = userLocal.name || "Thành viên";
+
+    const previewImg = document.getElementById('profile-avatar-preview');
+    if (previewImg) {
+        previewImg.src = userLocal.avatar
+            || 'https://api.dicebear.com/7.x/adventurer/svg?seed=' + (userLocal.uid || 'default');
+    }
+
+    const emailDisplay   = document.getElementById('profile-email-display');
+    const phoneDisplay   = document.getElementById('profile-phone-display');
+    const addressDisplay = document.getElementById('profile-address-display');
+    if (emailDisplay)   emailDisplay.innerText   = userLocal.email   || "—";
+    if (phoneDisplay)   phoneDisplay.innerText   = userLocal.phone   || "—";
+    if (addressDisplay) addressDisplay.innerText = userLocal.address || "—";
+    }
+
+    function renderMyTickets() {
+    const container = document.getElementById('my-tickets-container');
+    if (!container) return;
+
+    const orders = JSON.parse(localStorage.getItem('eventOrders')) || [];
+    
+    if (orders.length === 0) {
+        container.innerHTML = `
+            <div class="bg-white p-10 rounded-[3rem] text-center border-2 border-dashed border-gray-100">
+                <p class="text-gray-400 font-bold uppercase tracking-widest">Bạn chưa có vé nào</p>
+                <a href="index.html" class="mt-4 inline-block text-pink-500 font-black uppercase text-xs border-b-2 border-pink-500">Khám phá sự kiện ngay</a>
+            </div>`;
+        return;
+    }
+
+    container.innerHTML = orders.reverse().map(order => {
+        const totalQty = order.tickets.reduce((sum, t) => sum + (t.qty || 1), 0);
+        const ticketNames = order.tickets.map(t => t.name).join(', ');
+
+        return `
+        <div onclick="viewOrderDetail('${order.id}')" 
+             class="relative bg-white group cursor-pointer transition-all duration-300 hover:scale-[1.02] mb-6">
+            <div class="flex items-center overflow-hidden rounded-[2rem] border-2 border-gray-100 shadow-sm hover:border-pink-200">
+                <div class="w-24 h-32 bg-pink-500 flex flex-col items-center justify-center text-white border-r-2 border-dashed border-gray-200">
+                    <i class="fa-solid fa-ticket-alt text-3xl mb-1"></i>
+                    <span class="text-[10px] font-bold uppercase rotate-[-90deg] origin-center">EventHub</span>
+                </div>
+                <div class="flex-1 p-5 relative">
+                    <div class="absolute -left-[10px] top-1/2 -translate-y-1/2 w-5 h-5 bg-[#fdfcf0] rounded-full border-r-2 border-gray-100"></div>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-black text-xl uppercase text-gray-800">${order.event}</h4>
+                            <div class="flex items-center gap-4 mt-1 text-gray-500 font-bold text-[11px]">
+                                <span><i class="fa-solid fa-calendar-days mr-1"></i> ${order.eventTime || order.time}</span>
+                                <span><i class="fa-solid fa-location-dot mr-1"></i> ${order.location || 'Hà Nội'}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="bg-pink-100 text-pink-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter">Đã thanh toán</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Mã vé: #${order.id}</p>
+                        <span class="font-black text-pink-500 text-lg">${order.total}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function viewOrderDetail(orderId) {
+    const orders = JSON.parse(localStorage.getItem('eventOrders')) || [];
+    const order = orders.find(o => o.id === orderId);
+    
+    if (!order) {
+        console.error("Không tìm thấy đơn hàng với ID:", orderId);
+        return;
+    }
+
+    updateTicketData({
+        eventName: order.event,
+        seatType: order.tickets.map(t => t.name).join(', '),
+        seatNumber: "x" + order.tickets.reduce((sum, t) => sum + (t.qty || 1), 0),
+        ownerName: order.customer,
+        ticketId: "#" + order.id,
+        time: order.eventTime || order.time,
+        price: order.total,
+        location: order.location || "Xem trong email xác nhận"
+    });
+    openModal('modal-ticket-detail');
+}
+
+function updateTicketData(data) {
+  
+    document.getElementById('ticket-event-name').innerText = data.eventName;
+    document.getElementById('ticket-seat').innerText = `${data.seatType} • ${data.seatNumber}`;
+    document.getElementById('ticket-owner').innerText = data.ownerName;
+    document.getElementById('ticket-id').innerText = data.ticketId;
+    document.getElementById('ticket-time').innerText = data.time;
+    document.getElementById('ticket-price').innerText = typeof data.price === 'number' ? data.price.toLocaleString('vi-VN') + 'đ' : (data.price || "0đ");
+    document.getElementById('ticket-location').innerText = data.location;
+
+    const qrContent = `
+    SỰ KIỆN: ${data.eventName}
+    VỊ TRÍ: ${data.seatType} - ${data.seatNumber}
+    CHỦ VÉ: ${data.ownerName}
+    MÃ VÉ: ${data.ticketId}
+    THỜI GIAN: ${data.time}
+    ĐỊA ĐIỂM: ${data.location}
+    `.trim();
+
+    const encodedContent = encodeURIComponent(qrContent);
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodedContent}`;
+
+    document.getElementById('ticket-qr').src = qrUrl;
+}
+
+const myTicket = {
+    eventName: "GAI HOME CONCERT",
+    seatType: "VIP A12",
+    seatNumber: "ROW 01",
+    ownerName: "Diệu Thảo",
+    ticketId: "#EHB-99201",
+    time: "20:00 - 15/05/2026",
+    price: 1500000,
+    location: "Sân vận động Quốc gia Mỹ Đình, Hà Nội"
+};
+
+let selectedTicketId = '';
+let selectedPrice = 0;
+
+function openRefundModal(ticketId, price) {
+    selectedTicketId = ticketId;
+    selectedPrice = price;
+
+    const refundAmount = price * 0.95;
+    
+    const amountDisplay = document.getElementById('refund-amount');
+    if (amountDisplay) {
+        amountDisplay.innerText = refundAmount.toLocaleString('vi-VN') + 'đ';
+    }
+
+    const modal = document.getElementById('refund-modal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex'); 
+}
+
+function closeRefundModal() {
+    const modal = document.getElementById('refund-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+function toggleOtherReason() {
+    const select = document.getElementById('refund-reason-select');
+    const container = document.getElementById('other-reason-container');
+    
+    if (select.value === 'other') {
+        container.classList.remove('hidden');
+    } else {
+        container.classList.add('hidden');
+    }
+}
+
+function confirmRefundRequest() {
+    const reasonSelect = document.getElementById('refund-reason-select');
+    const reasonValue = reasonSelect.value;
+    const note = document.getElementById('refund-reason-text').value;
+    
+    const finalReason = reasonValue === 'other' ? note : reasonValue;
+
+    if (reasonValue === 'other' && !note.trim()) {
+        alert("Vui lòng nhập lý do cụ thể!");
+        return;
+    }
+
+    const finalRefundAmount = selectedPrice * 0.95;
+
+    let allOrders = JSON.parse(localStorage.getItem('eventOrders')) || [];
+    const orderIdx = allOrders.findIndex(o => o.id === selectedTicketId);
+
+    if (orderIdx !== -1) {
+        allOrders[orderIdx]._isRefund = true; 
+        allOrders[orderIdx].refundReason = finalReason;
+        allOrders[orderIdx].refundStatus = 'pending'; 
+        allOrders[orderIdx].amountToRefund = finalRefundAmount;
+        
+        localStorage.setItem('eventOrders', JSON.stringify(allOrders));
+
+        closeRefundModal();
+        
+        const successModal = document.getElementById('refund-success-modal');
+        if (successModal) {
+            successModal.classList.remove('hidden');
+            successModal.classList.add('flex');
+        } else {
+            alert("Gửi yêu cầu thành công!");
+        }
+
+        renderRefundTickets();
+        renderMyTickets();
+
+        window.dispatchEvent(new Event('storage_updated'));
+    } else {
+        alert("Không tìm thấy đơn hàng!");
+    }
+}
+
+function markOrderAsRefunding(orderId) {
+    let orders = JSON.parse(localStorage.getItem('eventOrders')) || [];
+    const index = orders.findIndex(o => o.id === orderId);
+    
+    if (index !== -1) {
+        orders[index].status = 'refunding'; 
+        localStorage.setItem('eventOrders', JSON.stringify(orders));
+        
+        renderRefundTickets();
+        renderMyTickets();
+    }
+}
+
+function renderRefundTickets() {
+    const container = document.getElementById('ticket-list-refund');
+    if (!container) return;
+
+    const orders = JSON.parse(localStorage.getItem('eventOrders')) || [];
+
+    if (orders.length === 0) {
+        container.innerHTML = `<p class="col-span-full text-center text-gray-400 font-bold py-10">Bạn chưa có đơn hàng nào để hoàn tiền.</p>`;
+        return;
+    }
+
+    container.innerHTML = orders.reverse().map(order => {
+        const totalQty = order.tickets.reduce((sum, t) => sum + (t.qty || 1), 0);
+        const seatNames = order.tickets.map(t => t.name).join(', ');
+        const priceValue = parseInt(order.total.replace(/\D/g, ''));
+        const refundStatus = order.refundStatus; // undefined | 'pending' | 'approved' | 'rejected'
+
+        let refundBtn = '';
+        if (refundStatus === 'pending') {
+            refundBtn = `
+            <button disabled class="w-full bg-yellow-400 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-2">
+                <i class="fa-solid fa-clock-rotate-left animate-pulse"></i> Đã gửi yêu cầu - Đang chờ xử lý
+            </button>`;
+        } else if (refundStatus === 'approved') {
+            refundBtn = `
+            <button disabled class="w-full bg-green-500 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-2">
+                <i class="fa-solid fa-circle-check"></i> Đã hoàn tiền thành công
+            </button>`;
+        } else if (refundStatus === 'rejected') {
+            refundBtn = `
+            <button disabled class="w-full bg-red-400 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider cursor-not-allowed flex items-center justify-center gap-2">
+                <i class="fa-solid fa-circle-xmark"></i> Yêu cầu bị từ chối
+            </button>`;
+        } else {
+            refundBtn = `
+            <button onclick="openRefundModal('${order.id}', ${priceValue})" 
+                    class="w-full bg-gray-900 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-wider hover:bg-red-600 transition-colors">
+                Yêu cầu hoàn tiền
+            </button>`;
+        }
+
+        return `
+        <div class="bg-white p-6 rounded-[2.5rem] border-2 border-gray-50 relative overflow-hidden group hover:shadow-xl transition-all">
+            <div class="flex justify-between items-start mb-4">
+                <div class="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-red-500 text-xl">
+                    <i class="fa-solid fa-ticket"></i>
+                </div>
+                <div class="text-right">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase leading-none">Mã đơn hàng</p>
+                    <p class="text-xs font-black text-blue-600 font-mono">#${order.id}</p>
+                </div>
+            </div>
+
+            <h4 class="font-black uppercase text-sm text-gray-800 mb-1">${order.event}</h4>
+            
+            <div class="space-y-1 mb-4">
+                <p class="text-[10px] text-gray-500 font-bold">
+                    <i class="fa-regular fa-clock mr-1"></i> Mua lúc: ${order.time}
+                </p>
+                <p class="text-[10px] text-gray-500 font-bold">
+                    <i class="fa-solid fa-chair mr-1"></i> Chỗ ngồi: ${seatNames}
+                </p>
+                <p class="text-[10px] text-gray-500 font-bold">
+                    <i class="fa-solid fa-layer-group mr-1"></i> Số lượng: ${totalQty} vé
+                </p>
+                <p class="text-[10px] text-gray-500 font-bold">
+                    <i class="fa-solid fa-money-bill-wave mr-1"></i> Tổng thanh toán: <span class="text-red-500">${order.total}</span>
+                </p>
+            </div>
+
+            ${refundBtn}
+        </div>`;
+    }).join('');
+}
+
+Object.assign(window, {
+    setAmount: (val) => { document.getElementById('nap-tien-input').value = val; },
+    selectMethod: (method) => {
+        selectedMethod = method;
+        document.querySelectorAll('.payment-method').forEach(btn => btn.classList.remove('border-pink-500', 'bg-pink-50', 'border-blue-500', 'bg-blue-50'));
+        const activeBtn = document.getElementById(`method-${method}`);
+        if (method === 'momo') activeBtn.classList.add('border-pink-500', 'bg-pink-50');
+        else activeBtn.classList.add('border-blue-500', 'bg-blue-50');
+    },
+    openRefundModal,     
+    closeRefundModal,     
+    toggleOtherReason,    
+    confirmRefundRequest, 
+    renderRefundTickets,
+    viewOrderDetail,
+    renderMyTickets,
+    processPayment,
+    simulateSuccess,
+    renderRefundTickets,
+    showPage: (pageId, element) => {
+        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        
+        if (pageId === 'profile') {
+            loadProfileToInputs();
+        }
+
+        if (pageId === 'tickets') {
+            renderMyTickets();
+        }
+
+        if (pageId === 'refund-page') { 
+        renderRefundTickets();
+        }
+
+        if (element) {
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            element.classList.add('active');
+        }
+        dropdownMenu.classList.remove('active');
+    },
+    openModal: (id) => { 
+    const modal = document.getElementById(id);
+    if (modal) {
+        modal.classList.add('active');
+
+        if (id === 'modal-ticket-detail') {
+            const userLocal = JSON.parse(localStorage.getItem('userLogin')) || {};
+            
+            myTicket.ownerName = userLocal.name || "Khách hàng";
+            
+            updateTicketData(myTicket);
+        }
+    }
+},
+    closeModal,
+    updateTicketData,
+    backToStep1,
+    updateUserProfile, 
+    changePassword,    
+    handleAvatarChange, 
+    printInvoice: (type, amount) => {
+        const invoiceContent = `
+            ELYSIUM TRANSACTION REPORT
+            --------------------------
+            Giao dịch: ${type}
+            Số tiền: ${amount} VNĐ
+            Thời gian: ${new Date().toLocaleString('vi-VN')}
+            Trạng thái: THÀNH CÔNG
+            --------------------------
+            Cảm ơn bạn đã tin dùng Elysium!
+        `;
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write('<pre style="padding:20px; font-family:monospace;">' + invoiceContent + '</pre>');
+        printWindow.document.close();
+        printWindow.print();
+    }
+});
+
+document.addEventListener('change', (e) => {
+    if (e.target && e.target.id === 'avatar-upload') {
+        handleAvatarChange(e);
+    }
+});
+
+document.addEventListener('click', () => dropdownMenu.classList.remove('active'));
+
+renderMyTickets();
+
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get('tab');
+
+        if (!tab) return;
+
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                if (tab === 'topup') {
+                    if (typeof openModal === 'function') {
+                        openModal('modal-nap-tien');
+                    } else {
+                        const modal = document.getElementById('modal-nap-tien');
+                        if (modal) modal.classList.add('active');
+                    }
+                } else if (tab === 'tickets') {
+                    const ticketsBtn = document.querySelector('[onclick="showPage(\'tickets\', this)"]');
+                    if (ticketsBtn) {
+                        ticketsBtn.click();
+                    } else if (typeof showPage === 'function') {
+                        showPage('tickets', null);
+                    }
+                } else if (tab === 'profile') {
+                    const profileBtn = document.querySelector('[onclick="showPage(\'profile\')"]') ||
+                                       document.querySelector('[onclick*="showPage(\'profile\'"]');
+                    if (profileBtn) {
+                        profileBtn.click();
+                    } else if (typeof showPage === 'function') {
+                        showPage('profile', null);
+                    }
+                } else if (tab === 'refund') {
+                    const refundBtn = document.querySelector('[onclick="showPage(\'refund-page\', this)"]');
+                    if (refundBtn) {
+                        refundBtn.click();
+                    } else if (typeof showPage === 'function') {
+                        showPage('refund-page', null);
+                    }
+                }
+            }, 300); 
+        });
+    })();
+
+function saveToHistory(amount, type, description) {
+    const now = new Date();
+    const dateStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} - ${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()}`;
+    
+    let history = JSON.parse(localStorage.getItem('wallet_history')) || [];
+    
+    const isDuplicate = history.some(item => item.description === description && item.amount === amount);
+    if (isDuplicate) return;
+
+    history.push({ 
+        amount, 
+        date: dateStr, 
+        type: type, 
+        description: description 
+    });
+    localStorage.setItem('wallet_history', JSON.stringify(history));
+}
+
+window.addEventListener('storage', (e) => {
+    if (e.key === 'currentBalance') {
+        const newBalance = parseInt(e.newValue) || 0;
+        if (typeof updateBalanceUI === 'function') updateBalanceUI(newBalance);
+    }
+
+    if (e.key === 'eventOrders') {
+        const newOrders = JSON.parse(e.newValue) || [];
+        const oldOrders = JSON.parse(e.oldValue || '[]') || [];
+
+        // Lắng nghe admin approve/reject hoàn tiền
+        newOrders.forEach(newOrder => {
+            const oldOrder = oldOrders.find(o => o.id === newOrder.id);
+            if (!oldOrder) return;
+
+            if (oldOrder.refundStatus === 'pending' && newOrder.refundStatus === 'approved') {
+                // Admin xác nhận → cộng tiền vào ví
+                const refundAmt = newOrder.amountToRefund || 0;
+                const newBalance = (parseInt(localStorage.getItem('currentBalance')) || 0) + refundAmt;
+                localStorage.setItem('currentBalance', newBalance);
+                if (typeof updateBalanceUI === 'function') updateBalanceUI(newBalance);
+                if (typeof addHistoryEntry === 'function') addHistoryEntry(refundAmt, false, 'deposit', `Hoàn tiền vé: ${newOrder.event}`);
+                if (typeof saveToHistory === 'function') saveToHistory(refundAmt, 'deposit', `Hoàn tiền vé: ${newOrder.event}`);
+                if (typeof renderRefundTickets === 'function') renderRefundTickets();
+                if (typeof renderMyTickets === 'function') renderMyTickets();
+                alert(`✅ Admin đã xác nhận hoàn ${new Intl.NumberFormat('vi-VN').format(refundAmt)}đ vào ví của bạn!`);
+            }
+
+            if (oldOrder.refundStatus === 'pending' && newOrder.refundStatus === 'rejected') {
+                // Admin từ chối
+                if (typeof renderRefundTickets === 'function') renderRefundTickets();
+                if (typeof renderMyTickets === 'function') renderMyTickets();
+                alert(`❌ Yêu cầu hoàn tiền cho vé "${newOrder.event}" đã bị từ chối.`);
+            }
+        });
+
+        // Giữ lại logic cũ
+        if (newOrders.length > 0) {
+            const last = newOrders[newOrders.length - 1];
+            if (last.method === 'ElysiumPay') {
+                const amount = parseInt(last.total.replace(/[^\d]/g, ''));
+                const desc = `Thanh toán vé: ${last.event}`;
+                addHistoryEntry(amount, false, 'payment', desc);
+                saveToHistory(amount, 'payment', desc);
+            }
+        }
+    }
+});
+
+window.addEventListener('storage_updated', () => {
+    const freshBalance = parseInt(localStorage.getItem('currentBalance')) || 0;
+    if (typeof updateBalanceUI === 'function') updateBalanceUI(freshBalance);
+
+    const orders = JSON.parse(localStorage.getItem('eventOrders')) || [];
+    if (orders.length > 0) {
+        const last = orders[orders.length - 1];
+        if (last.method === 'ElysiumPay') {
+            const amount = parseInt(last.total.replace(/[^\d]/g, ''));
+            const desc = `Thanh toán vé: ${last.event}`;
+            
+            const historyList = document.getElementById('history-list');
+            if (historyList && !historyList.innerText.includes(last.event)) {
+                addHistoryEntry(amount, false, 'payment', desc);
+                saveToHistory(amount, 'payment', desc);
+            }
+        }
+    }
+});
